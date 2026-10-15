@@ -6,6 +6,12 @@
 
 Umgesetzt: 14 Lektionen mit 59 geführten Schritten, kurzen Verständnisfragen und visuellen Beispielen, 70 feste Fragen, generierte Subnetting-Aufgaben, Prüfungstraining, Fehlerwiederholung, IPv4-/Binärtrainer, Netzvergleich, FLSM, schrittweise Netzwerkabläufe, interaktive Routing-/PAT-Tabellen sowie Import/Export von Fortschritt. Erklärfragen werden ausdrücklich selbst eingeschätzt. Automatische Trefferquoten enthalten nur automatisch prüfbare Fragen.
 
+## Zugang für Lernende
+
+Die Einzelfile-Version ist weiterhin das installationsfreie Ergebnis. Die Produktionsoberfläche kann über **Offline-Datei** eine saubere selbstständige Kopie herunterladen. GitHub-Pages-Bereitstellung ist in `.github/workflows/pages.yml` vorbereitet; Hosting wurde nicht durch die Sitzung aktiviert und ein Live-Link ist noch nicht bestätigt. Siehe `docs/ACCESS.md` für die einmaligen Admin-Schritte.
+
+Beim Fortschrittsimport zählt die neueste Antwort je Frage, damit alte Sicherungen keine bereits behobenen Fehler wieder öffnen. Simulationstabs behalten besuchte Schritte und bearbeitete Routing-/PAT-Eingaben, solange die Ansicht geöffnet bleibt.
+
 ## Quellen und Grenzen
 
 Die Inhalte basieren auf dem bereitgestellten 21-seitigen Telematik-Lernskript. Die Präzisierungen auf Seite 20 sind berücksichtigt. Die 164 Originalseiten und deren Abbildungen wurden nicht bereitgestellt. Videos sind Links aus dem Skript; ihre aktuelle Verfügbarkeit wurde nicht geprüft. Keine Behauptung einer offiziellen Prüfungsabdeckung oder Zugehörigkeit zu BBC/Moodle.

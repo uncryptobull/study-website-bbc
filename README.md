@@ -24,7 +24,13 @@ Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer, Übu
 
 Keine Anmeldung, API-Schlüssel oder Backend-Dienste. Die Anwendung lädt keine externen Schriften oder Video-Player; Quellen und Videos öffnen nur nach einem Klick.
 
-## Schnell starten
+## Als Link oder Datei benutzen
+
+Zum Lernen brauchst du keine Entwicklungswerkzeuge. Die fertige **Telematik-verstehen.html** enthält die ganze App. Auf einer gehosteten Version kannst du sie mit **Offline-Datei** rechts oben speichern. Antworten und Fortschritt werden nicht in die weitergegebene HTML-Datei eingebettet; eine separate Sicherung lässt sich in der App exportieren.
+
+Die Website-Bereitstellung über GitHub Pages ist vorbereitet. Ein Administrator muss einmal Pages aktivieren und **Publish study site** starten. Der Link ist erst nach erfolgreicher Veröffentlichung live. Die konkreten Schritte stehen in [docs/ACCESS.md](docs/ACCESS.md).
+
+## Entwickeln und bearbeiten
 
 Installiere eine aktuelle **Node.js-LTS-Version** (mindestens 20.19; Node 22 empfohlen). Öffne ein Terminal im Projektordner:
 
@@ -43,7 +49,7 @@ npm run build
 
 Danach kannst du **`dist/index.html` per Doppelklick öffnen** oder diese Datei weitergeben. Das fertige Lernprogramm ist in einer HTML-Datei gebündelt. Externe Quellen/Videos benötigen weiterhin Internet. Der Fortschritt bleibt pro Browser und Speicherort getrennt; nutze den Export für Sicherungen und zum Übertragen.
 
-Bei erfolgreichen GitHub-Actions-Läufen wird der fertige Build ausserdem als Download-Artefakt `Telematik-verstehen-offline` bereitgestellt. Das ist kein automatisch veröffentlichtes Webhosting.
+Bei erfolgreichen GitHub-Actions-Läufen wird der fertige Build ausserdem als Download-Artefakt `Telematik-verstehen-offline` bereitgestellt. Zusätzlich ist eine getrennte GitHub-Pages-Bereitstellung vorbereitet; deren Aktivierung ist in [docs/ACCESS.md](docs/ACCESS.md) beschrieben.
 
 ## Quellcode bearbeiten
 

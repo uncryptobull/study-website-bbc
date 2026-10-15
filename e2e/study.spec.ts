@@ -345,3 +345,61 @@ test('glossary lookup and focus timer work', async ({ page }) => {
   await page.clock.fastForward(25 * 60 * 1000);
   await expect(page.getByRole('status')).toContainText('25 Minuten sind um');
 });
+
+test('importing an old backup does not resurrect a resolved mistake', async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'telematik-progress-v1',
+      JSON.stringify({
+        completed: [],
+        mistakes: [],
+        attempts: [{ id: 'binary-1', correct: true, date: '2026-10-15T14:00:00Z' }],
+      }),
+    ),
+  );
+  await page.goto('/#progress');
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({
+      name: 'older.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(
+        JSON.stringify({
+          completed: [],
+          mistakes: ['binary-1'],
+          attempts: [{ id: 'binary-1', correct: false, date: '2026-10-15T12:00:00Z' }],
+        }),
+      ),
+    });
+  await expect(page.getByRole('status')).toContainText('importiert');
+  await expect
+    .poll(() =>
+      page.evaluate(() => JSON.parse(localStorage.getItem('telematik-progress-v1')!).mistakes),
+    )
+    .toEqual([]);
+});
+
+test('simulation tabs support keyboard navigation and retain previous steps and inputs', async ({
+  page,
+}) => {
+  await page.goto('/#simulations');
+  await page.getByRole('button', { name: 'Nächster Schritt', exact: true }).click();
+  const webStep = await page.locator('.simulation-stage h2:visible').innerText();
+  await page.getByRole('tab', { name: 'Website öffnen', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'DHCP', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.keyboard.press('Home');
+  await expect(page.locator('.simulation-stage h2:visible')).toHaveText(webStep);
+  await page.getByRole('tab', { name: 'NAT / PAT', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Interne IPv4-Adresse' }).fill('192.168.1.90');
+  await page.getByRole('button', { name: 'Verbindung öffnen' }).click();
+  await page.getByRole('tab', { name: 'DNS', exact: true }).click();
+  await page.getByRole('tab', { name: 'NAT / PAT', exact: true }).click();
+  await expect(page.locator('.pat-table tbody tr')).toHaveCount(3);
+  await expect(page.getByRole('textbox', { name: 'Interne IPv4-Adresse' })).toHaveValue(
+    '192.168.1.90',
+  );
+});

@@ -13,6 +13,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { topics, videos } from './content';
+import { mergeProgress } from './progress-merge';
 import { guidedCompleted } from './learning-progress';
 import { glossary } from './glossary';
 import { emptyProgress, validateProgress, type Progress } from './storage';
@@ -64,32 +65,7 @@ export function ProgressPage({
     try {
       if (file.size > 5_000_000) throw new Error('Die Datei ist zu gross (maximal 5 MB).');
       const incoming = validateProgress(JSON.parse(await file.text()));
-      setProgress({
-        completed: [...new Set([...progress.completed, ...incoming.completed])],
-        mistakes: [...new Set([...progress.mistakes, ...incoming.mistakes])],
-        lessonSteps: Object.fromEntries(
-          [
-            ...new Set([
-              ...Object.keys(progress.lessonSteps ?? {}),
-              ...Object.keys(incoming.lessonSteps ?? {}),
-            ]),
-          ].map((id) => [
-            id,
-            [
-              ...new Set([
-                ...(progress.lessonSteps?.[id] ?? []),
-                ...(incoming.lessonSteps?.[id] ?? []),
-              ]),
-            ],
-          ]),
-        ),
-        lastLesson: incoming.lastLesson ?? progress.lastLesson,
-        attempts: [
-          ...new Map(
-            [...progress.attempts, ...incoming.attempts].map((a) => [`${a.id}-${a.date}`, a]),
-          ).values(),
-        ],
-      });
+      setProgress(mergeProgress(progress, incoming));
       setStatus('Fortschritt importiert und mit deinem vorhandenen Stand zusammengeführt.');
     } catch (e) {
       setStatus(e instanceof Error ? e.message : 'Import nicht möglich.');

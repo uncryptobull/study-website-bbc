@@ -8,6 +8,7 @@ import {
   Clock3,
   Coffee,
   FileText,
+  Download,
   GraduationCap,
   Home,
   Menu,
@@ -29,6 +30,7 @@ import GuidedLesson from './GuidedLesson';
 import SimulationsPage from './SimulationsPage';
 import { ProgressPage, Sources } from './StudyPages';
 import { emptyProgress, readProgress, storageKey, type Attempt, type Progress } from './storage';
+import { saveOfflineApp } from './offline-download';
 import { guidedCompleted } from './learning-progress';
 import { pageNames, parseRoute, routeHash, type Page, type Route } from './navigation';
 
@@ -81,6 +83,7 @@ export default function App() {
   const [initial] = useState(readProgress),
     [progress, setProgress] = useState<Progress>(initial.progress),
     [warning, setWarning] = useState(initial.warning);
+  const [downloadNotice, setDownloadNotice] = useState('');
   const [sessionActive, setSessionActive] = useState(false),
     [pendingRoute, setPendingRoute] = useState<Route | null>(null);
   const sessionRef = useRef(false);
@@ -369,6 +372,29 @@ export default function App() {
                     .padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`
                 : '25 Min.'}
             </button>
+            {import.meta.env.PROD && (
+              <button
+                className="offline-download"
+                onClick={() => {
+                  try {
+                    saveOfflineApp(document);
+                    setDownloadNotice(
+                      'Die Offline-Datei ist zum Speichern vorbereitet. Öffne sie danach mit Edge oder Chrome. Deinen Lernstand kannst du unter «Fortschritt & Sicherung» übertragen.',
+                    );
+                  } catch (error) {
+                    setDownloadNotice(
+                      error instanceof Error
+                        ? error.message
+                        : 'Der Download konnte nicht vorbereitet werden.',
+                    );
+                  }
+                }}
+                aria-label="Offline-Datei speichern"
+              >
+                <Download size={16} />
+                <span>Offline-Datei</span>
+              </button>
+            )}
             <button
               className="theme-switch icon-button"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
@@ -379,6 +405,18 @@ export default function App() {
           </div>
         </header>
         <main id="main-content" ref={mainRef} tabIndex={-1}>
+          {downloadNotice && (
+            <div className="notice" role="status">
+              {downloadNotice}
+              <button
+                className="icon-button"
+                aria-label="Download-Hinweis schliessen"
+                onClick={() => setDownloadNotice('')}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
           {warning && (
             <div className="notice warning" role="alert">
               {warning}
