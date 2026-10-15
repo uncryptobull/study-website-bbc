@@ -1,5 +1,11 @@
 export type Attempt = { id: string; correct: boolean; date: string; self?: boolean };
-export type Progress = { completed: string[]; attempts: Attempt[]; mistakes: string[] };
+export type Progress = {
+  completed: string[];
+  attempts: Attempt[];
+  mistakes: string[];
+  lessonSteps?: Record<string, string[]>;
+  lastLesson?: { topic: string; step: number };
+};
 export const emptyProgress: Progress = { completed: [], attempts: [], mistakes: [] };
 export const storageKey = 'telematik-progress-v1';
 export function validateProgress(value: unknown): Progress {
@@ -21,7 +27,39 @@ export function validateProgress(value: unknown): Progress {
     )
   )
     throw new Error('Diese Datei enthält keinen gültigen Lernfortschritt.');
+  if (
+    v.lessonSteps !== undefined &&
+    (!v.lessonSteps ||
+      typeof v.lessonSteps !== 'object' ||
+      Array.isArray(v.lessonSteps) ||
+      !Object.values(v.lessonSteps).every(
+        (items) => Array.isArray(items) && items.every((id) => typeof id === 'string'),
+      ))
+  )
+    throw new Error('Die gespeicherten Lektionsschritte sind ungültig.');
+  const last = v.lastLesson as { topic?: unknown; step?: unknown } | undefined;
+  if (
+    last !== undefined &&
+    (!last ||
+      typeof last.topic !== 'string' ||
+      typeof last.step !== 'number' ||
+      !Number.isInteger(last.step) ||
+      last.step < 0 ||
+      last.step > 99)
+  )
+    throw new Error('Die gespeicherte Lektionsposition ist ungültig.');
   return {
+    ...(v.lessonSteps
+      ? {
+          lessonSteps: Object.fromEntries(
+            Object.entries(v.lessonSteps as Record<string, string[]>).map(([topic, steps]) => [
+              topic,
+              [...new Set(steps)],
+            ]),
+          ),
+        }
+      : {}),
+    ...(last ? { lastLesson: { topic: last.topic as string, step: last.step as number } } : {}),
     completed: [...new Set(v.completed)],
     mistakes: [...new Set(v.mistakes)],
     attempts: v.attempts,

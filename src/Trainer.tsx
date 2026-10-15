@@ -1,53 +1,83 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ArrowRight, Binary, Check, ChevronDown, Network, Shuffle } from 'lucide-react';
 import { bits, compareNetworks, formatIP, splitNetwork, subnet } from './network';
 
 type TrainerMode = 'ip' | 'binary' | 'compare' | 'split';
+const trainerTabs = [
+  ['ip', 'IPv4 & Subnetting'],
+  ['binary', 'Binärtrainer'],
+  ['compare', 'Netzvergleich'],
+  ['split', 'FLSM aufteilen'],
+] as const;
 export default function Trainer() {
   const [mode, setMode] = useState<TrainerMode>('ip');
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   return (
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">VERSTEHEN DURCH AUSPROBIEREN</p>
+          <p className="eyebrow">NETZWERK-LABOR</p>
           <h1>
-            Dein Netzwerk-Labor<span>.</span>
+            Adressen berechnen<span>.</span>
           </h1>
-          <p>Ändere ein Bit. Entdecke den Zusammenhang. Rechne selbst nach.</p>
+          <p>Subnetze berechnen, Bits umschalten und zwei Netzkonfigurationen vergleichen.</p>
         </div>
         <div className="label-pill">
-          <Network size={16} /> Interaktiv · ohne Risiko
+          <Network size={16} /> Vier Werkzeuge
         </div>
       </div>
       <div className="tabs" role="tablist" aria-label="Trainer auswählen">
-        {(
-          [
-            ['ip', 'IPv4 & Subnetting'],
-            ['binary', 'Binärtrainer'],
-            ['compare', 'Netzvergleich'],
-            ['split', 'FLSM aufteilen'],
-          ] as const
-        ).map(([id, label]) => (
+        {trainerTabs.map(([id, label], index) => (
           <button
             key={id}
+            ref={(element) => {
+              tabRefs.current[index] = element;
+            }}
+            id={`trainer-tab-${id}`}
             role="tab"
             aria-selected={mode === id}
+            aria-controls={`trainer-panel-${id}`}
+            tabIndex={mode === id ? 0 : -1}
             onClick={() => setMode(id)}
+            onKeyDown={(event) => {
+              const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+              if (!keys.includes(event.key)) return;
+              event.preventDefault();
+              const next =
+                event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? trainerTabs.length - 1
+                    : (index + (event.key === 'ArrowRight' ? 1 : -1) + trainerTabs.length) %
+                      trainerTabs.length;
+              setMode(trainerTabs[next][0]);
+              tabRefs.current[next]?.focus();
+            }}
             className={mode === id ? 'active' : ''}
           >
             {label}
           </button>
         ))}
       </div>
-      {mode === 'ip' ? (
-        <IPTrainer />
-      ) : mode === 'binary' ? (
-        <BinaryTrainer />
-      ) : mode === 'compare' ? (
-        <CompareTrainer />
-      ) : (
-        <SplitTrainer />
-      )}
+      {trainerTabs.map(([id]) => (
+        <div
+          key={id}
+          id={`trainer-panel-${id}`}
+          role="tabpanel"
+          aria-labelledby={`trainer-tab-${id}`}
+          hidden={mode !== id}
+        >
+          {id === 'ip' ? (
+            <IPTrainer />
+          ) : id === 'binary' ? (
+            <BinaryTrainer />
+          ) : id === 'compare' ? (
+            <CompareTrainer />
+          ) : (
+            <SplitTrainer />
+          )}
+        </div>
+      ))}
     </>
   );
 }
@@ -96,7 +126,7 @@ function IPTrainer() {
           <div className="section-top">
             <div>
               <p className="eyebrow">01 / AUSGANGSLAGE</p>
-              <h2>Eine Adresse. Alle Zusammenhänge.</h2>
+              <h2>IPv4-Adresse und Präfix</h2>
             </div>
             <Network className="muted" />
           </div>
@@ -104,9 +134,13 @@ function IPTrainer() {
             <label className="grow">
               IPv4-Adresse
               <input
+                id="trainer-ip"
                 value={ip}
                 onChange={(e) => setIP(e.target.value)}
                 spellCheck={false}
+                autoComplete="off"
+                aria-invalid={Boolean(safely(() => subnet(ip, '24')).error)}
+                aria-describedby={result.error ? 'ip-input-error ip-input-hint' : 'ip-input-hint'}
                 placeholder="192.168.1.77"
               />
             </label>
@@ -119,10 +153,16 @@ function IPTrainer() {
                   value={prefix}
                   onChange={(e) => setPrefix(e.target.value)}
                   inputMode="numeric"
+                  autoComplete="off"
+                  aria-invalid={Boolean(safely(() => subnet('192.168.1.1', prefix)).error)}
+                  aria-describedby={result.error ? 'ip-input-error ip-input-hint' : 'ip-input-hint'}
                 />
               </div>
             </label>
           </div>
+          <p className="caption" id="ip-input-hint">
+            Vier Oktette von 0 bis 255; ein Präfix von 0 bis 32. Beispiel: 192.168.1.77/26.
+          </p>
           <div className="presets">
             <span>Beispiel laden</span>
             {[
@@ -144,7 +184,7 @@ function IPTrainer() {
             ))}
           </div>
           {result.error && (
-            <p className="error" role="alert">
+            <p className="error" id="ip-input-error" role="alert">
               {result.error}
             </p>
           )}
@@ -178,7 +218,7 @@ function IPTrainer() {
               <div className="section-top">
                 <div>
                   <p className="eyebrow">02 / DIE BITS DAHINTER</p>
-                  <h2>Hier verläuft die Grenze.</h2>
+                  <h2>Netz- und Hostbits</h2>
                 </div>
                 <div className="legend">
                   <span>
@@ -289,7 +329,7 @@ function BinaryTrainer() {
   return (
     <div className="card binary-trainer">
       <p className="eyebrow">ACHT BITS. 256 MÖGLICHKEITEN.</p>
-      <h2>Eine Zahl zum Anfassen.</h2>
+      <h2>Binär und dezimal</h2>
       <p>Klicke auf die Bits. Jede 1 zählt ihren Stellenwert mit.</p>
       <div className="binary-switches">
         {[128, 64, 32, 16, 8, 4, 2, 1].map((weight, i) => (
@@ -309,7 +349,9 @@ function BinaryTrainer() {
       <div className="binary-total">
         <div>
           <span>Dezimal</span>
-          <strong>{value}</strong>
+          <strong aria-live="polite" aria-atomic="true">
+            {value}
+          </strong>
         </div>
         <div>
           <span>Hexadezimal</span>
@@ -326,7 +368,7 @@ function BinaryTrainer() {
       <div className="mini-challenge">
         <Binary />
         <div>
-          <h3>Deine Challenge: Stelle {target} dar.</h3>
+          <h3>Übung: Stelle {target} dar.</h3>
           <p aria-live="polite">
             {value === target
               ? 'Geschafft! Die gesetzten Stellenwerte ergeben genau die gesuchte Zahl.'
@@ -336,7 +378,7 @@ function BinaryTrainer() {
         <button
           className="button secondary"
           onClick={() => {
-            setTarget(Math.floor(Math.random() * 256));
+            setTarget((previous) => (previous + 1 + Math.floor(Math.random() * 255)) % 256);
             setValue(0);
           }}
         >
@@ -376,6 +418,10 @@ function CompareTrainer() {
                 <input
                   aria-label={`IP ${label}`}
                   value={ip as string}
+                  spellCheck={false}
+                  autoComplete="off"
+                  aria-invalid={Boolean(safely(() => subnet(ip as string, '24')).error)}
+                  aria-describedby={result.error ? 'compare-input-error' : undefined}
                   onChange={(e) => (change as (v: string) => void)(e.target.value)}
                 />
               </label>
@@ -384,6 +430,10 @@ function CompareTrainer() {
                 <input
                   aria-label={`Präfix ${label}`}
                   value={p as string}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-invalid={Boolean(safely(() => subnet('192.168.1.1', p as string)).error)}
+                  aria-describedby={result.error ? 'compare-input-error' : undefined}
                   onChange={(e) => (changeP as (v: string) => void)(e.target.value)}
                 />
               </label>
@@ -392,7 +442,7 @@ function CompareTrainer() {
         ))}
       </div>
       {result.error ? (
-        <p className="error" role="alert">
+        <p className="error" id="compare-input-error" role="alert">
           {result.error}
         </p>
       ) : (
@@ -439,13 +489,20 @@ function SplitTrainer() {
   const r = result.value;
   return (
     <section className="card">
-      <p className="eyebrow">GLEICH GROSS. KLAR GETRENNT.</p>
+      <p className="eyebrow">GLEICH GROSSE SUBNETZE</p>
       <h2>FLSM: Ein Netz aufteilen.</h2>
       <p>Ein längerer Präfix unterteilt deinen Ausgangsbereich in gleich grosse Subnetze.</p>
       <div className="input-row">
         <label className="grow">
           Adresse im Ausgangsnetz
-          <input value={ip} onChange={(e) => setIP(e.target.value)} />
+          <input
+            value={ip}
+            onChange={(e) => setIP(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+            aria-invalid={Boolean(safely(() => subnet(ip, '24')).error)}
+            aria-describedby={result.error ? 'split-input-error' : undefined}
+          />
         </label>
         <label>
           Alter Präfix
@@ -453,6 +510,10 @@ function SplitTrainer() {
             value={original}
             onChange={(e) => setOriginal(e.target.value)}
             aria-label="Alter Präfix"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-invalid={Boolean(safely(() => subnet('192.168.1.1', original)).error)}
+            aria-describedby={result.error ? 'split-input-error' : undefined}
           />
         </label>
         <ArrowRight className="input-arrow" />
@@ -462,11 +523,17 @@ function SplitTrainer() {
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             aria-label="Neuer Präfix"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-invalid={Boolean(
+              safely(() => splitNetwork('192.168.1.1', original, target)).error,
+            )}
+            aria-describedby={result.error ? 'split-input-error' : undefined}
           />
         </label>
       </div>
       {result.error ? (
-        <p className="error" role="alert">
+        <p className="error" id="split-input-error" role="alert">
           {result.error}
         </p>
       ) : (
@@ -478,14 +545,37 @@ function SplitTrainer() {
                 {formatIP(r.base.network)}/{r.base.prefix}
               </strong>
               <p>
-                2<sup>{Number(target) - Number(original)}</sup> = {r.count.toLocaleString('de-CH')}{' '}
+                2<sup>{r.rows[0].prefix - r.base.prefix}</sup> = {r.count.toLocaleString('de-CH')}{' '}
                 Subnetze. Jedes hat {r.rows[0].size.toLocaleString('de-CH')} Adressen, davon{' '}
                 {r.rows[0].usable.toLocaleString('de-CH')} nutzbar
-                {Number(target) === 31 ? ' auf Punkt-zu-Punkt-Links' : ''}.
+                {r.rows[0].prefix === 31 ? ' auf Punkt-zu-Punkt-Links' : ''}.
               </p>
+              {r.base.address !== r.base.network && (
+                <p>
+                  Deine Ausgangsadresse liegt im Netz {formatIP(r.base.network)}/{r.base.prefix}.
+                  Aufgeteilt wird dieses ganze Netz.
+                </p>
+              )}
+              {r.rows[0].prefix >= 31 && (
+                <p>
+                  {r.rows[0].prefix === 31
+                    ? '/31 ist ein Sonderfall für Punkt-zu-Punkt-Verbindungen: Beide Adressen sind nutzbar, ein Broadcast entfällt.'
+                    : '/32 bezeichnet jeweils genau eine Adresse. Das ist eine Hostroute, kein gewöhnliches LAN-Subnetz.'}
+                </p>
+              )}
             </div>
+            {r.count > r.rows.length && (
+              <p className="notice">
+                Vorschau: die ersten {r.rows.length} von {r.count.toLocaleString('de-CH')}{' '}
+                Subnetzen. Das letzte Netz ist {formatIP(r.base.last - r.rows[0].size + 1)}/
+                {r.rows[0].prefix}.
+              </p>
+            )}
             <div className="table-scroll">
               <table>
+                <caption className="sr-only">
+                  Gleich grosse Subnetze mit nutzbaren Adressen und Broadcast
+                </caption>
                 <thead>
                   <tr>
                     <th>Subnetz</th>
@@ -510,12 +600,6 @@ function SplitTrainer() {
                 </tbody>
               </table>
             </div>
-            {r.count > 64 && (
-              <p className="caption">
-                Zur Übersicht werden die ersten 64 von {r.count.toLocaleString('de-CH')} Netzen
-                angezeigt.
-              </p>
-            )}
           </>
         )
       )}

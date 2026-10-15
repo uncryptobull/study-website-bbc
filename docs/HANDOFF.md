@@ -2,9 +2,9 @@
 
 ## Stand
 
-«Telematik verstehen» ist eine eigenständige React/TypeScript-Anwendung mit Vite. Kein Backend, keine Anmeldung und keine API-Schlüssel. Der Desktop ist das primäre Ziel; schmale Bildschirme werden ebenfalls unterstützt. Light/Dark-Modus und Lernfortschritt werden im Browser gespeichert.
+«Telematik verstehen» ist eine eigenständige React/TypeScript-Anwendung mit Vite. Kein Backend, keine Anmeldung und keine API-Schlüssel. Der Desktop ist das primäre Ziel; schmale Bildschirme werden ebenfalls unterstützt. Die Oberfläche verwendet eine Slate-/Blau-Palette, ohne die früheren grünen Flächen und Marketingtexte. Dark ist der Standard für neue Profile. Theme, Fortschritt und der genaue Lektionsschritt werden im Browser gespeichert.
 
-Umgesetzt: 14 Lektionen, 70 feste Fragen, generierte Subnetting-Aufgaben, Prüfungstraining, Fehlerwiederholung, IPv4-/Binärtrainer, Netzvergleich, FLSM, schrittweise Netzwerkabläufe sowie Import/Export von Fortschritt. Erklärfragen werden ausdrücklich selbst eingeschätzt. Automatische Trefferquoten enthalten nur automatisch prüfbare Fragen.
+Umgesetzt: 14 Lektionen mit 59 geführten Schritten, kurzen Verständnisfragen und visuellen Beispielen, 70 feste Fragen, generierte Subnetting-Aufgaben, Prüfungstraining, Fehlerwiederholung, IPv4-/Binärtrainer, Netzvergleich, FLSM, schrittweise Netzwerkabläufe, interaktive Routing-/PAT-Tabellen sowie Import/Export von Fortschritt. Erklärfragen werden ausdrücklich selbst eingeschätzt. Automatische Trefferquoten enthalten nur automatisch prüfbare Fragen.
 
 ## Quellen und Grenzen
 
@@ -21,17 +21,25 @@ Voraussetzung: Node.js ab 20.19 (empfohlen: aktuelle Node-22-LTS-Version). `npm 
 
 ## Wo ändere ich was?
 
-| Datei                | Zuständigkeit                                            |
-| -------------------- | -------------------------------------------------------- |
-| `src/content.ts`     | Lektionen, feste Fragen, Quellen und Videoverweise       |
-| `src/network.ts`     | Reine IPv4-Berechnungen                                  |
-| `src/Trainer.tsx`    | Interaktive Trainer                                      |
-| `src/Quiz.tsx`       | Antwortprüfung, Hinweise und Übungsrunden                |
-| `src/simulations.ts` | Schritte der Netzwerkabläufe                             |
-| `src/storage.ts`     | Fortschrittsformat und Importvalidierung                 |
-| `src/App.tsx`        | Navigation, Dashboard, Lektionen, Fortschritt, Quellen   |
-| `src/styles.css`     | Desktop-Layout, kleinere Bildschirme, beide Farbschemata |
-| `e2e/study.spec.ts`  | Browserprüfungen                                         |
+| Datei                      | Zuständigkeit                                            |
+| -------------------------- | -------------------------------------------------------- |
+| `src/learning.ts`          | Geführte Lektionsschritte und Verständnisfragen          |
+| `src/GuidedLesson.tsx`     | Lektionsansicht, Schrittsteuerung und Zusammenfassung    |
+| `src/LessonVisual.tsx`     | Lernillustrationen und direkte Interaktionen             |
+| `src/content.ts`           | Feste Quizfragen, Quellen und Videoverweise              |
+| `src/network.ts`           | Reine IPv4-Berechnungen                                  |
+| `src/Trainer.tsx`          | Interaktive Trainer                                      |
+| `src/Quiz.tsx`             | Antwortprüfung, Hinweise und Übungsrunden                |
+| `src/simulations.ts`       | Schritte der Netzwerkabläufe                             |
+| `src/storage.ts`           | Fortschrittsformat und Importvalidierung                 |
+| `src/App.tsx`              | Navigation, Startseite, Lektionsübersicht                |
+| `src/navigation.ts`        | URL-Routen für Lektionen und Schritte                    |
+| `src/StudyPages.tsx`       | Fortschritt, Sicherungen, Begriffssuche und Quellen      |
+| `src/learning-progress.ts` | Abschlussregeln für die geführten Lektionen              |
+| `src/quiz-utils.ts`        | Eingabeprüfung und aufgabenspezifische Hinweise          |
+| `src/SimulationTools.tsx`  | Bearbeitbare Routingtabelle und PAT-Zuordnung            |
+| `src/styles.css`           | Desktop-Layout, kleinere Bildschirme, beide Farbschemata |
+| `e2e/study.spec.ts`        | Browserprüfungen                                         |
 
 ## Zusammenarbeit
 
@@ -41,9 +49,9 @@ Vor einer Integration fremden Codes erst Struktur und vorhandene Funktionen verg
 
 ## Prüfungen
 
-`npm test` prüft Berechnungen für alle IPv4-Präfixe mit unabhängig über Python `ipaddress` bestimmten Referenzwerten, Sonderfälle, ungültige Eingaben, Fragenbestand und Sicherungsformat.
+`npm test` prüft Berechnungen für alle IPv4-Präfixe mit unabhängig über Python `ipaddress` bestimmten Referenzwerten, Sonderfälle, ungültige Eingaben, Fragenbestand und Sicherungsformat, Antwortformate, Routerauswahl, PAT-Zuordnungen und URL-Routen. Alte Lesemarkierungen bleiben in Backups erhalten; neue geführte Lektionen zählen erst nach den jeweiligen Verständnisfragen als abgeschlossen.
 
-Für Browserprüfungen einmal `npx playwright install chromium`, dann `npm run test:e2e`. In Cloud-Maschinen mit vorhandenem System-Chromium: `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e`. Die Browserprüfungen decken unter anderem Trainer, Fehlerrunden, gemischte Prüfung, Speicherung, Import/Export, schmale Ansichten sowie automatisierte Accessibility-Prüfungen für beide Themes ab. Automatische Checks ersetzen keine vollständige manuelle Prüfung.
+Für Browserprüfungen einmal `npx playwright install chromium`, dann `npm run test:e2e`. In Cloud-Maschinen mit vorhandenem System-Chromium: `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e`. Die Browserprüfungen durchlaufen alle 59 Lektionsschritte und decken ausserdem Trainer, Fehlerrunden, gemischte Prüfung, Speicherung, Import/Export, schmale Ansichten sowie automatisierte Accessibility-Prüfungen für beide Themes ab. Automatische Checks ersetzen keine vollständige manuelle Prüfung.
 
 ## Sinnvolle nächste Schritte
 

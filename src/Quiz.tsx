@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,7 +11,9 @@ import {
   X,
 } from 'lucide-react';
 import { findQuestion, generatedQuestion, questions, topics, type Question } from './content';
+import { answerFormatError, answerFormatHint, answerMatches, nextQuestionHint } from './quiz-utils';
 import type { Attempt } from './storage';
+export { answerMatches } from './quiz-utils';
 export function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -20,27 +22,70 @@ export function shuffled<T>(items: T[]): T[] {
   }
   return copy;
 }
-export function answerMatches(input: string, expected: string): boolean {
-  return input.trim().toLowerCase() === expected.trim().toLowerCase();
-}
 export function QuestionCard({
   question: q,
   onAnswer,
   onNext,
   last = false,
+  onStudyTopic,
 }: {
   question: Question;
   onAnswer: (attempt: Attempt) => void;
   onNext: () => void;
   last?: boolean;
+  onStudyTopic?: (topic: string) => void;
 }) {
   const [input, setInput] = useState('');
   const [result, setResult] = useState<boolean | null>(null);
   const [hint, setHint] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [validation, setValidation] = useState<string | null>(null);
   const [choices] = useState(() => (q.choices ? shuffled(q.choices) : []));
+  const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const explanationRef = useRef<HTMLDivElement>(null);
+  const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const questionId = useId();
+  const helpId = `${questionId}-help`;
+  const errorId = `${questionId}-error`;
+  const formatHint = answerFormatHint(q);
+  const answeredRef = useRef(false);
+
+  function revealSolution() {
+    setValidation(null);
+    setRevealed(true);
+  }
+
+  useEffect(() => {
+    if (q.choices) headingRef.current?.focus({ preventScroll: true });
+    else fieldRef.current?.focus({ preventScroll: true });
+  }, [q]);
+  useEffect(() => {
+    if (result === null) return;
+    nextRef.current?.focus({ preventScroll: true });
+    feedbackRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [result]);
+  useEffect(() => {
+    if (revealed && result === null) explanationRef.current?.focus({ preventScroll: true });
+  }, [revealed, result]);
+
   function submit(correct?: boolean) {
-    if (result !== null) return;
+    if (answeredRef.current) return;
+    if (!q.self && !revealed) {
+      const error = q.choices
+        ? input
+          ? null
+          : 'Wähle zuerst eine Antwort aus.'
+        : answerFormatError(input, q.answer);
+      if (error) {
+        setValidation(error);
+        fieldRef.current?.focus();
+        return;
+      }
+    }
+    answeredRef.current = true;
     const right = correct ?? (answerMatches(input, q.answer) && !revealed);
     setResult(right);
     onAnswer({
@@ -58,12 +103,17 @@ export function QuestionCard({
           {q.self ? 'Selbstkontrolle' : q.choices ? 'Multiple Choice' : 'Deine Eingabe'}
         </span>
       </div>
-      <h2>{q.prompt}</h2>
+      <h2 ref={headingRef} tabIndex={-1} id={questionId}>
+        {q.prompt}
+      </h2>
       {q.self ? (
         <>
           <label>
             Deine Erklärung
             <textarea
+              ref={(field) => {
+                fieldRef.current = field;
+              }}
               rows={4}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -76,12 +126,32 @@ export function QuestionCard({
           </p>
         </>
       ) : q.choices ? (
-        <div className="choices">
+        <div className="choices" role="radiogroup" aria-labelledby={questionId}>
           {choices.map((choice, i) => (
             <button
               key={choice}
+              ref={(button) => {
+                choiceRefs.current[i] = button;
+              }}
+              type="button"
+              role="radio"
+              aria-checked={input === choice}
+              tabIndex={input === choice || (!input && i === 0) ? 0 : -1}
               disabled={result !== null}
               onClick={() => setInput(choice)}
+              onKeyDown={(event) => {
+                if (result !== null) return;
+                if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(event.key)) {
+                  event.preventDefault();
+                  const offset = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : -1;
+                  const next = (i + offset + choices.length) % choices.length;
+                  setInput(choices[next]);
+                  choiceRefs.current[next]?.focus();
+                } else if (event.key === 'Enter' && input === choice) {
+                  event.preventDefault();
+                  submit();
+                }
+              }}
               className={`${input === choice ? 'selected' : ''} ${result !== null && choice === q.answer ? 'correct-choice' : ''} ${result === false && input === choice && choice !== q.answer ? 'wrong-choice' : ''}`}
             >
               <span className="choice-letter">{String.fromCharCode(65 + i)}</span>
@@ -92,44 +162,67 @@ export function QuestionCard({
         </div>
       ) : (
         <form
+          className="question-submit-form"
           onSubmit={(e) => {
             e.preventDefault();
-            if (input.trim()) submit();
+            submit();
           }}
         >
           <label>
             Deine Antwort
             <input
+              ref={(field) => {
+                fieldRef.current = field;
+              }}
               autoComplete="off"
               value={input}
               disabled={result !== null}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setValidation(null);
+              }}
+              aria-invalid={!!validation}
+              aria-describedby={
+                [formatHint ? helpId : '', validation ? errorId : ''].filter(Boolean).join(' ') ||
+                undefined
+              }
+              inputMode={/^\d+$/.test(q.answer) ? 'numeric' : 'text'}
               placeholder="Antwort eingeben …"
             />
           </label>
         </form>
       )}
+      {result === null && q.choices && (
+        <p className="caption quiz-help">Mit Pfeiltasten auswählen. Enter prüft die Auswahl.</p>
+      )}
+      {result === null && formatHint && (
+        <p className="caption quiz-help" id={helpId}>
+          {formatHint} Enter prüft die Antwort.
+        </p>
+      )}
+      {validation && (
+        <p className="quiz-validation" id={errorId} role="alert">
+          {validation}
+        </p>
+      )}
       {hint > 0 && (
         <div className="hint-box">
           <Lightbulb size={18} />
           <div>
-            <strong>{hint === 1 ? 'Ein kleiner Hinweis' : 'Der nächste Schritt'}</strong>
+            <strong>{hint === 1 ? 'Hinweis' : 'Nächster Schritt'}</strong>
             <p>{q.hint}</p>
-            {hint > 1 && (
-              <p>
-                {q.topic === 'subnetting'
-                  ? 'Notiere zuerst die Anzahl Hostbits. Leite daraus die Blockgrösse ab und suche die Blockgrenze unterhalb deiner Adresse.'
-                  : q.topic === 'binary'
-                    ? 'Schreibe die Stellenwerte von 128 bis 1 auf. Gehe von links nach rechts und notiere, welche Werte noch in den Rest passen.'
-                    : 'Ordne die Aufgabe zuerst einem Gerät oder Dienst zu. Erkläre seine Funktion, bevor du die Antwort auswählst.'}
-              </p>
-            )}
+            {hint > 1 && <p>{nextQuestionHint(q)}</p>}
           </div>
         </div>
       )}
       {revealed && result === null && (
-        <div className="explanation">
+        <div className="explanation" ref={explanationRef} tabIndex={-1}>
           <strong>{q.self ? 'Musterlösung' : 'Lösung zur Selbstkontrolle'}</strong>
+          {!q.self && (
+            <p>
+              <strong>{q.answer}</strong>
+            </p>
+          )}
           <p>{q.explanation}</p>
           {!q.self && (
             <p className="caption">
@@ -140,7 +233,11 @@ export function QuestionCard({
       )}
       {result !== null ? (
         <>
-          <div className={`feedback ${result ? 'success' : 'incorrect'}`} role="status">
+          <div
+            ref={feedbackRef}
+            className={`feedback ${result ? 'success' : 'incorrect'}`}
+            role="status"
+          >
             {result ? <CheckCircle2 size={24} /> : <RefreshCw size={24} />}
             <div>
               <h3>
@@ -149,10 +246,10 @@ export function QuestionCard({
                     ? 'Als verstanden markiert'
                     : 'Für die Wiederholung vorgemerkt'
                   : result
-                    ? 'Richtig. Gut verstanden!'
+                    ? 'Richtig beantwortet'
                     : revealed
                       ? 'Mit Lösung geübt. Wiederhole es später.'
-                      : 'Noch nicht ganz. Genau hier lernst du.'}
+                      : 'Antwort nicht richtig'}
               </h3>
               {!q.self && !result && (
                 <p>
@@ -160,9 +257,14 @@ export function QuestionCard({
                 </p>
               )}
               <p>{q.explanation}</p>
+              {!result && onStudyTopic && (
+                <button className="text-button" onClick={() => onStudyTopic(q.topic)}>
+                  Lektion nachlesen
+                </button>
+              )}
             </div>
           </div>
-          <button className="button primary" onClick={onNext}>
+          <button ref={nextRef} className="button primary" onClick={onNext}>
             {last ? 'Auswertung ansehen' : 'Nächste Frage'}
             <ArrowRight size={17} />
           </button>
@@ -173,11 +275,11 @@ export function QuestionCard({
             {hint < 2 && (
               <button className="button ghost" onClick={() => setHint(hint + 1)}>
                 <Lightbulb size={16} />
-                {hint === 0 ? 'Einen Hinweis' : 'Nächster Schritt'}
+                {hint === 0 ? 'Hinweis anzeigen' : 'Nächster Schritt'}
               </button>
             )}
-            {hint >= 2 && !revealed && (
-              <button className="button ghost" onClick={() => setRevealed(true)}>
+            {hint >= 2 && !revealed && !q.self && (
+              <button className="button ghost" onClick={revealSolution}>
                 Lösung aufdecken
               </button>
             )}
@@ -188,7 +290,7 @@ export function QuestionCard({
                 <button
                   className="button primary"
                   disabled={!input.trim()}
-                  onClick={() => setRevealed(true)}
+                  onClick={revealSolution}
                 >
                   Mit Musterlösung vergleichen
                 </button>
@@ -206,8 +308,12 @@ export function QuestionCard({
               )}
             </>
           ) : (
-            <button className="button primary" disabled={!input.trim()} onClick={() => submit()}>
-              Antwort prüfen
+            <button
+              className="button primary"
+              disabled={!revealed && !input.trim()}
+              onClick={() => submit()}
+            >
+              {revealed ? 'Als geübt speichern' : 'Antwort prüfen'}
               <ArrowRight size={17} />
             </button>
           )}
@@ -221,23 +327,63 @@ export default function Quiz({
   mistakes,
   initialMode = 'practice',
   initialTopic = 'all',
+  onSessionChange,
+  onStudyTopic,
 }: {
   onAnswer: (a: Attempt) => void;
   mistakes: string[];
   initialMode?: 'practice' | 'exam' | 'mistakes';
   initialTopic?: string;
+  onSessionChange?: (active: boolean) => void;
+  onStudyTopic?: (topic: string) => void;
 }) {
-  const [filter, setFilter] = useState(initialTopic);
+  const [filter, setFilter] = useState(
+    topics.some((topic) => topic.id === initialTopic) ? initialTopic : 'all',
+  );
   const [session, setSession] = useState<Question[] | null>(null);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Attempt[]>([]);
   const [generator, setGenerator] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [exitRequested, setExitRequested] = useState(false);
+  const exitDialogRef = useRef<HTMLDialogElement>(null);
+  const overviewRef = useRef<HTMLButtonElement>(null);
+  const summaryRef = useRef<HTMLHeadingElement>(null);
+  const active = !!session && !finished && answers.length < session.length;
+  const repeatQuestions = mistakes
+    .map(findQuestion)
+    .filter((question): question is Question => !!question);
+
+  useEffect(() => {
+    onSessionChange?.(active);
+    return () => onSessionChange?.(false);
+  }, [active, onSessionChange]);
+  useEffect(() => {
+    if (!active) return;
+    function beforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [active]);
+  useEffect(() => {
+    if (exitRequested) exitDialogRef.current?.showModal();
+    else exitDialogRef.current?.close();
+  }, [exitRequested]);
+  useEffect(() => {
+    if (finished) summaryRef.current?.focus({ preventScroll: true });
+  }, [finished]);
+
+  function leaveSession() {
+    setExitRequested(false);
+    setSession(null);
+    setFinished(false);
+  }
   function start(mode: 'practice' | 'exam' | 'mistakes' | 'generator') {
     let selected: Question[] = [];
     if (mode === 'generator') selected = Array.from({ length: 10 }, generatedQuestion);
-    else if (mode === 'mistakes')
-      selected = shuffled(mistakes.map(findQuestion).filter((q): q is Question => !!q));
+    else if (mode === 'mistakes') selected = shuffled(repeatQuestions);
     else if (mode === 'exam')
       selected = shuffled(
         topics.map((t) => shuffled(questions.filter((q) => q.topic === t.id && !q.self))[0]),
@@ -247,6 +393,7 @@ export default function Quiz({
         0,
         filter === 'all' ? 10 : 5,
       );
+    if (!selected.length) return;
     setGenerator(mode === 'generator');
     setSession(selected);
     setIndex(0);
@@ -260,27 +407,27 @@ export default function Quiz({
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">WISSEN AKTIV ABRUFEN</p>
+          <p className="eyebrow">LERNEN & ÜBEN</p>
           <h1>
             {initialMode === 'mistakes'
-              ? 'Aus Fehlern wird Wissen'
+              ? 'Fehler wiederholen'
               : initialMode === 'exam'
-                ? 'Dein Prüfungsmodus'
-                : 'Übung macht Verständnis'}
-            <span>.</span>
+                ? 'Prüfungstraining'
+                : 'Übungsfragen'}
           </h1>
           <p>
             {initialMode === 'mistakes'
               ? 'Hier warten Fragen, die du noch einmal üben möchtest.'
-              : 'Erst nachdenken. Dann antworten. Aus jeder Antwort etwas mitnehmen.'}
+              : 'Teste dein Wissen. Zu jeder Antwort erhältst du eine Erklärung.'}
           </p>
         </div>
         {session && (
           <button
+            ref={overviewRef}
             className="button secondary"
             onClick={() => {
-              setSession(null);
-              setFinished(false);
+              if (active) setExitRequested(true);
+              else leaveSession();
             }}
           >
             <ArrowLeft size={16} />
@@ -299,12 +446,12 @@ export default function Quiz({
                 {initialMode === 'mistakes'
                   ? 'Deine Wiederholung'
                   : initialMode === 'exam'
-                    ? 'Einmal quer durch den Stoff'
-                    : 'Dein nächster Aha-Moment'}
+                    ? '14 Themen, 14 Fragen'
+                    : 'Eine Lernrunde zusammenstellen'}
               </h2>
               <p>
                 {initialMode === 'mistakes'
-                  ? `${mistakes.length} offene Fragen. Sobald du eine richtig beantwortest, verschwindet sie aus dieser Liste.`
+                  ? `${repeatQuestions.length} offene Fragen. Sobald du eine richtig beantwortest, verschwindet sie aus dieser Liste.`
                   : initialMode === 'exam'
                     ? '14 zufällig gewählte Fragen: eine pro Thema. Ohne Zeitdruck, mit Auswertung nach Themen. Ein Übungstest, keine offizielle Prüfung.'
                     : 'Wähle ein Thema oder mische zehn Fragen. Hinweise helfen dir schrittweise weiter.'}
@@ -324,10 +471,10 @@ export default function Quiz({
               )}
               <button
                 className="button primary"
-                disabled={initialMode === 'mistakes' && !mistakes.length}
+                disabled={initialMode === 'mistakes' && !repeatQuestions.length}
                 onClick={() => start(initialMode)}
               >
-                {initialMode === 'mistakes' && !mistakes.length
+                {initialMode === 'mistakes' && !repeatQuestions.length
                   ? 'Keine offenen Fehler'
                   : initialMode === 'exam'
                     ? 'Prüfungstraining starten'
@@ -339,8 +486,8 @@ export default function Quiz({
               <div className="icon-tile peach">
                 <Shuffle size={26} />
               </div>
-              <p className="eyebrow">IMMER NEUE AUFGABEN</p>
-              <h2>Subnetting, frisch gemischt.</h2>
+              <p className="eyebrow">ZUFÄLLIGE ADRESSEN</p>
+              <h2>Neue Subnetting-Aufgaben</h2>
               <p>
                 Zehn neu generierte Aufgaben zu Netzadressen und Broadcasts. Von /24 bis /30, mit
                 /20 als zusätzlicher Herausforderung.
@@ -355,9 +502,9 @@ export default function Quiz({
             </section>
           </div>
           <div className="notice">
-            {initialMode === 'mistakes' && !mistakes.length
+            {initialMode === 'mistakes' && !repeatQuestions.length
               ? 'Noch keine offenen Fehler. Starte eine Lernrunde; falsche Antworten erscheinen danach hier.'
-              : 'Du lernst für dich. Dein Fortschritt bleibt in diesem Browser und lässt sich unter «Fortschritt» exportieren.'}
+              : 'Dein Fortschritt bleibt in diesem Browser und lässt sich unter «Fortschritt» exportieren.'}
           </div>
         </>
       ) : finished ? (
@@ -366,8 +513,10 @@ export default function Quiz({
             <CheckCircle2 size={32} />
           </div>
           <p className="eyebrow">RUNDE ABGESCHLOSSEN</p>
-          <h2>
-            {correct} von {auto.length} automatisch geprüften Antworten richtig.
+          <h2 ref={summaryRef} tabIndex={-1}>
+            {auto.length
+              ? `${correct} von ${auto.length} automatisch geprüften Antworten richtig.`
+              : 'Deine Selbsteinschätzung ist abgeschlossen.'}
           </h2>
           {answers.some((a) => a.self) && (
             <p>
@@ -376,9 +525,9 @@ export default function Quiz({
             </p>
           )}
           <p>
-            {correct === auto.length
-              ? 'Stark! Versuche als Nächstes ein anderes Thema.'
-              : 'Jeder Fehler zeigt dir den nächsten sinnvollen Lernschritt.'}
+            {auto.length && correct === auto.length
+              ? 'Alle automatisch geprüften Antworten sind richtig. Du kannst ein anderes Thema üben.'
+              : 'Fragen zum erneuten Üben findest du unter «Fehler wiederholen».'}
           </p>
           <div className="topic-results">
             {topics
@@ -390,8 +539,10 @@ export default function Quiz({
                   <div key={t.id}>
                     <span>{t.title}</span>
                     <strong>
-                      {checked.filter((x) => x.correct).length}/{checked.length}
-                      {a.some((x) => x.self) ? ' + Selbstkontrolle' : ''}
+                      {checked.length
+                        ? `${checked.filter((x) => x.correct).length}/${checked.length}`
+                        : ''}
+                      {a.some((x) => x.self) ? `${checked.length ? ' + ' : ''}Selbstkontrolle` : ''}
                     </strong>
                   </div>
                 );
@@ -411,15 +562,23 @@ export default function Quiz({
             <span>
               Frage {index + 1} von {total}
             </span>
-            <div className="progress-track">
-              <div style={{ width: `${(index / total) * 100}%` }} />
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-label="Beantwortete Fragen"
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-valuenow={answers.length}
+            >
+              <div style={{ width: `${(answers.length / total) * 100}%` }} />
             </div>
-            <span>{answers.filter((a) => a.correct && !a.self).length} richtig</span>
+            <span>{answers.filter((a) => a.correct && !a.self).length} automatisch richtig</span>
           </div>
           <QuestionCard
             key={`${session[index].id}-${index}`}
             question={session[index]}
             last={index === total - 1}
+            onStudyTopic={onStudyTopic}
             onAnswer={(a) => {
               onAnswer(a);
               setAnswers((prev) => [...prev, a]);
@@ -428,6 +587,31 @@ export default function Quiz({
           />
         </>
       )}
+      <dialog
+        ref={exitDialogRef}
+        className="card quiz-exit-dialog"
+        aria-labelledby="quiz-exit-title"
+        aria-describedby="quiz-exit-description"
+        onCancel={() => setExitRequested(false)}
+        onClose={() => {
+          setExitRequested(false);
+          overviewRef.current?.focus({ preventScroll: true });
+        }}
+      >
+        <h2 id="quiz-exit-title">Lernrunde beenden?</h2>
+        <p id="quiz-exit-description">
+          Deine bisherigen Antworten bleiben gespeichert. Die aktuelle Runde und eine noch nicht
+          geprüfte Eingabe gehen verloren.
+        </p>
+        <div className="question-actions">
+          <button className="button primary" onClick={() => setExitRequested(false)}>
+            Weiter üben
+          </button>
+          <button className="button secondary" onClick={leaveSession}>
+            Runde beenden
+          </button>
+        </div>
+      </dialog>
     </>
   );
 }

@@ -1,93 +1,98 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowDownToLine,
   ArrowLeft,
   ArrowRight,
-  ArrowUpRight,
   BookOpen,
   Check,
-  CheckCircle2,
   ChevronRight,
-  CircleHelp,
   Clock3,
   Coffee,
-  Download,
-  ExternalLink,
-  FlaskConical,
+  FileText,
   GraduationCap,
-  LayoutDashboard,
+  Home,
   Menu,
   Moon,
   Network,
-  Play,
   RotateCcw,
   Search,
-  ShieldCheck,
-  Sparkles,
   Sun,
   Target,
   TrendingUp,
-  Upload,
   Waypoints,
   X,
 } from 'lucide-react';
-import { topics, questions, videos, type Topic } from './content';
+import { topics, questions, type Topic } from './content';
+import { learningGroups, learningSteps } from './learning';
 import Trainer from './Trainer';
 import Quiz from './Quiz';
-import { simulations } from './simulations';
-import {
-  emptyProgress,
-  readProgress,
-  storageKey,
-  validateProgress,
-  type Attempt,
-  type Progress,
-} from './storage';
+import GuidedLesson from './GuidedLesson';
+import SimulationsPage from './SimulationsPage';
+import { ProgressPage, Sources } from './StudyPages';
+import { emptyProgress, readProgress, storageKey, type Attempt, type Progress } from './storage';
+import { guidedCompleted } from './learning-progress';
+import { pageNames, parseRoute, routeHash, type Page, type Route } from './navigation';
 
-type Page =
-  | 'dashboard'
-  | 'learn'
-  | 'trainer'
-  | 'quiz'
-  | 'simulations'
-  | 'mistakes'
-  | 'progress'
-  | 'sources'
-  | 'exam';
-const navigation: { id: Page; label: string; icon: typeof BookOpen }[] = [
-  { id: 'dashboard', label: 'Übersicht', icon: LayoutDashboard },
-  { id: 'learn', label: 'Dein Lernpfad', icon: BookOpen },
-  { id: 'trainer', label: 'Netzwerk-Labor', icon: FlaskConical },
-  { id: 'quiz', label: 'Üben & festigen', icon: Target },
-  { id: 'simulations', label: 'Abläufe verstehen', icon: Waypoints },
-  { id: 'mistakes', label: 'Meine Fehler', icon: RotateCcw },
-];
-const validPages: Page[] = [...navigation.map((n) => n.id), 'progress', 'sources', 'exam'];
-function initialPage(): Page {
-  const id = location.hash.slice(1) as Page;
-  return validPages.includes(id) ? id : 'dashboard';
-}
+const navigation: { group: string; items: { id: Page; label: string; icon: typeof BookOpen }[] }[] =
+  [
+    {
+      group: 'Lernen',
+      items: [
+        { id: 'dashboard', label: 'Start', icon: Home },
+        { id: 'learn', label: 'Lektionen', icon: BookOpen },
+      ],
+    },
+    {
+      group: 'Anwenden',
+      items: [
+        { id: 'trainer', label: 'IP-Trainer', icon: Network },
+        { id: 'quiz', label: 'Übungen', icon: Target },
+        { id: 'simulations', label: 'Abläufe', icon: Waypoints },
+        { id: 'exam', label: 'Prüfungstraining', icon: GraduationCap },
+        { id: 'mistakes', label: 'Fehler wiederholen', icon: RotateCcw },
+      ],
+    },
+  ];
+export const friendlyTitles: Record<string, string> = {
+  devices: 'Wie Geräte miteinander sprechen',
+  addressing: 'Wozu ein Gerät eine Adresse braucht',
+  binary: 'Mit 0 und 1 rechnen',
+  ipv4: 'IP-Adresse und Netzmaske',
+  subnetting: 'Ein Netz in kleinere Netze aufteilen',
+};
 function initialTheme() {
   try {
-    return localStorage.getItem('telematik-theme') === 'dark' ? 'dark' : 'light';
+    return localStorage.getItem('telematik-theme') === 'light' ? 'light' : 'dark';
   } catch {
     return 'light';
   }
 }
+function courseTopics() {
+  return learningGroups.flatMap((group) =>
+    group.topics.map((id) => topics.find((t) => t.id === id)!),
+  );
+}
 export default function App() {
-  const [page, setPage] = useState<Page>(initialPage);
-  const [theme, setTheme] = useState(initialTheme);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [topic, setTopic] = useState<string | null>(null);
-  const [quizTopic, setQuizTopic] = useState('all');
-  const [search, setSearch] = useState('');
-  const [initial] = useState(readProgress);
-  const [progress, setProgress] = useState<Progress>(initial.progress);
-  const [warning, setWarning] = useState(initial.warning);
-  const [timer, setTimer] = useState<number | null>(null);
-  const [timerDone, setTimerDone] = useState(false);
-  const mainRef = useRef<HTMLElement>(null);
-  const firstRoute = useRef(true);
+  const [route, setRoute] = useState<Route>(() => parseRoute(location.hash));
+  const routeRef = useRef(route);
+  routeRef.current = route;
+  const [theme, setTheme] = useState(initialTheme),
+    [mobileOpen, setMobileOpen] = useState(false),
+    [search, setSearch] = useState('');
+  const [initial] = useState(readProgress),
+    [progress, setProgress] = useState<Progress>(initial.progress),
+    [warning, setWarning] = useState(initial.warning);
+  const [sessionActive, setSessionActive] = useState(false),
+    [pendingRoute, setPendingRoute] = useState<Route | null>(null);
+  const sessionRef = useRef(false);
+  sessionRef.current = sessionActive;
+  const dialogRef = useRef<HTMLDialogElement>(null),
+    mainRef = useRef<HTMLElement>(null),
+    searchRef = useRef<HTMLInputElement>(null);
+  const [deadline, setDeadline] = useState<number | null>(null),
+    [remaining, setRemaining] = useState(1500),
+    [timerDone, setTimerDone] = useState(false);
+  const page = route.page,
+    topic = route.topic;
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
@@ -95,54 +100,88 @@ export default function App() {
     } catch {}
   }, [theme]);
   useEffect(() => {
+    if (initial.warning && progress === initial.progress) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(progress));
     } catch {
       setWarning(
-        'Speichern im Browser ist blockiert oder der Speicher ist voll. Exportiere deinen Fortschritt unter «Fortschritt».',
+        'Dein Browser erlaubt das Speichern gerade nicht. Sichere deinen Fortschritt unter «Fortschritt» als Datei.',
       );
     }
-  }, [progress]);
+  }, [progress, initial]);
   useEffect(() => {
     function change() {
-      setPage(initialPage());
+      const incoming = parseRoute(location.hash);
+      if (sessionRef.current && routeHash(incoming) !== routeHash(routeRef.current)) {
+        history.replaceState(null, '', routeHash(routeRef.current));
+        setPendingRoute(incoming);
+        return;
+      }
+      setRoute(incoming);
       setMobileOpen(false);
     }
     window.addEventListener('hashchange', change);
     return () => window.removeEventListener('hashchange', change);
   }, []);
   useEffect(() => {
-    if (firstRoute.current) {
-      firstRoute.current = false;
-      return;
-    }
     window.scrollTo(0, 0);
     mainRef.current?.focus({ preventScroll: true });
-  }, [page]);
+    document.title = `${topic && page === 'learn' ? topics.find((t) => t.id === topic)?.title : pageNames[page]} · Telematik verstehen`;
+  }, [route]);
   useEffect(() => {
-    if (timer === null) return;
-    const id = window.setInterval(
-      () =>
-        setTimer((previous) => {
-          if (previous === null) return null;
-          if (previous <= 1) {
-            setTimerDone(true);
-            return null;
-          }
-          return previous - 1;
-        }),
-      1000,
-    );
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (pendingRoute && !dialog.open) dialog.showModal();
+    if (!pendingRoute && dialog.open) dialog.close();
+  }, [pendingRoute]);
+  useEffect(() => {
+    if (deadline === null) return;
+    function tick() {
+      const left = Math.max(0, Math.ceil((deadline! - Date.now()) / 1000));
+      setRemaining(left);
+      if (left === 0) {
+        setDeadline(null);
+        setTimerDone(true);
+      }
+    }
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [timer !== null]);
-  function navigate(id: Page) {
-    location.hash = id;
-    setPage(id);
+  }, [deadline]);
+  useEffect(() => {
+    function keys(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        requestNavigation({ page: 'learn' });
+        setTimeout(() => searchRef.current?.focus(), 0);
+      }
+      if (e.key === 'Escape') setMobileOpen(false);
+    }
+    window.addEventListener('keydown', keys);
+    return () => window.removeEventListener('keydown', keys);
+  }, []);
+  function applyRoute(next: Route) {
+    history.pushState(null, '', routeHash(next));
+    setRoute(next);
     setMobileOpen(false);
   }
-  function openTopic(id: string) {
-    setTopic(id);
-    navigate('learn');
+  function requestNavigation(next: Route) {
+    if (sessionRef.current && routeHash(next) !== routeHash(routeRef.current)) {
+      setPendingRoute(next);
+      return;
+    }
+    applyRoute(next);
+  }
+  function navigate(id: Page) {
+    requestNavigation({ page: id });
+  }
+  function openTopic(id: string, step?: number) {
+    const saved = progress.lastLesson?.topic === id ? progress.lastLesson.step : 0;
+    requestNavigation({ page: 'learn', topic: id, step: step ?? saved });
+  }
+  function studyStep(step: number) {
+    if (!topic) return;
+    applyRoute({ page: 'learn', topic, step });
   }
   function record(a: Attempt) {
     setProgress((p) => ({
@@ -153,19 +192,44 @@ export default function App() {
         : [...new Set([...p.mistakes, a.id])],
     }));
   }
-  function toggleCompleted(id: string) {
+  function stepUnderstood(id: string, stepId: string) {
     setProgress((p) => ({
       ...p,
-      completed: p.completed.includes(id)
-        ? p.completed.filter((i) => i !== id)
-        : [...p.completed, id],
+      lessonSteps: {
+        ...p.lessonSteps,
+        [id]: [...new Set([...(p.lessonSteps?.[id] ?? []), stepId])],
+      },
+      lastLesson: {
+        topic: id,
+        step: Math.max(
+          0,
+          learningSteps[id].findIndex((s) => s.id === stepId),
+        ),
+      },
     }));
   }
-  const completed = topics.filter((t) => progress.completed.includes(t.id)).length;
-  const percent = Math.round((completed / 14) * 100);
-  const automatic = progress.attempts.filter((a) => !a.self);
-  const correct = automatic.filter((a) => a.correct).length;
-  const next = topics.find((t) => !progress.completed.includes(t.id)) ?? topics[0];
+  function completeLesson(id: string) {
+    setProgress((p) => ({ ...p, completed: [...new Set([...p.completed, id])] }));
+  }
+  const finishedTopics = guidedCompleted(progress),
+    viewProgress = { ...progress, completed: finishedTopics };
+  const ordered = courseTopics(),
+    completed = finishedTopics.length;
+  const next =
+    progress.lastLesson && !finishedTopics.includes(progress.lastLesson.topic)
+      ? (topics.find((t) => t.id === progress.lastLesson!.topic) ?? ordered[0])
+      : (ordered.find((t) => !finishedTopics.includes(t.id)) ?? ordered[0]);
+  useEffect(() => {
+    if (page === 'learn' && topic) {
+      const step = route.step ?? 0;
+      setProgress((p) =>
+        p.lastLesson?.topic === topic && p.lastLesson.step === step
+          ? p
+          : { ...p, lastLesson: { topic, step } },
+      );
+    }
+  }, [page, topic, route.step]);
+  const nextTopic = topic ? ordered[ordered.findIndex((t) => t.id === topic) + 1] : undefined;
   return (
     <div className="app-shell">
       <a
@@ -178,70 +242,72 @@ export default function App() {
       >
         Zum Inhalt springen
       </a>
-      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`} id="primary-sidebar">
         <button
           className="brand"
           onClick={() => navigate('dashboard')}
-          aria-label="Telematik verstehen – Übersicht"
+          aria-label="Telematik verstehen – Start"
         >
           <span className="brand-symbol">
-            <Network size={26} />
+            tv<span>.</span>
           </span>
           <span>
-            telematik<span className="brand-sub">verstehen.</span>
+            Telematik<span className="brand-sub">verstehen</span>
           </span>
         </button>
-        <div className="sidebar-caption">DEIN DIGITALER LERNRAUM</div>
+        <div className="sidebar-course">Netzwerktechnik · Lernskript</div>
         <nav aria-label="Hauptnavigation">
-          {navigation.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => {
-                if (n.id === 'learn') setTopic(null);
-                navigate(n.id);
-              }}
-              className={`nav-item ${page === n.id ? 'selected' : ''}`}
-              aria-current={page === n.id ? 'page' : undefined}
-            >
-              <n.icon size={19} />
-              <span>{n.label}</span>
-              {n.id === 'mistakes' && progress.mistakes.length > 0 ? (
-                <span className="nav-badge">{progress.mistakes.length}</span>
-              ) : page === n.id ? (
-                <span className="nav-dot" />
-              ) : null}
-            </button>
+          {navigation.map((group) => (
+            <div className="nav-group" key={group.group}>
+              <p className="nav-group-label">{group.group}</p>
+              {group.items.map((n) => (
+                <button
+                  className={`nav-item ${page === n.id ? 'selected' : ''}`}
+                  aria-current={page === n.id ? 'page' : undefined}
+                  key={n.id}
+                  onClick={() => navigate(n.id)}
+                >
+                  <n.icon size={18} />
+                  <span>{n.label}</span>
+                  {n.id === 'mistakes' && progress.mistakes.length > 0 && (
+                    <span className="nav-badge">{progress.mistakes.length}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
-        <div className="sidebar-exam">
-          <div className="exam-icon">
-            <GraduationCap size={21} />
+        <div className="sidebar-progress">
+          <div>
+            <span>Lektionen gelesen</span>
+            <strong>{completed}/14</strong>
           </div>
-          <h3>Bereit für den Check?</h3>
-          <p>Teste dein Wissen quer durch alle 14 Themen.</p>
-          <button onClick={() => navigate('exam')}>
-            Prüfungstraining
-            <ArrowUpRight size={17} />
+          <div className="progress-track">
+            <span style={{ width: `${(completed / 14) * 100}%` }} />
+          </div>
+          <button className="text-button" onClick={() => navigate('progress')}>
+            Fortschritt ansehen
+            <ArrowRight size={14} />
           </button>
         </div>
         <div className="sidebar-bottom">
+          <button
+            className={`nav-item ${page === 'sources' ? 'selected' : ''}`}
+            onClick={() => navigate('sources')}
+          >
+            <FileText size={18} />
+            Nachschlagen
+          </button>
           <button
             className={`nav-item ${page === 'progress' ? 'selected' : ''}`}
             onClick={() => navigate('progress')}
           >
             <TrendingUp size={18} />
-            Dein Fortschritt
-          </button>
-          <button
-            className={`nav-item ${page === 'sources' ? 'selected' : ''}`}
-            onClick={() => navigate('sources')}
-          >
-            <CircleHelp size={18} />
-            Material & Quellen
+            Fortschritt & Sicherung
           </button>
           <div className="sidebar-footer">
             <span className="status-light" />
-            Ohne Anmeldung. Für dich.
+            {warning ? 'Speichern prüfen' : 'Fortschritt bleibt in diesem Browser'}
           </div>
         </div>
       </aside>
@@ -259,49 +325,57 @@ export default function App() {
               className="mobile-menu icon-button"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Menü öffnen"
+              aria-expanded={mobileOpen}
+              aria-controls="primary-sidebar"
             >
               <Menu size={21} />
             </button>
-            <span>Dein Lernraum</span>
+            <button onClick={() => navigate('dashboard')}>Telematik</button>
             <ChevronRight size={14} />
-            <strong>
-              {page === 'exam'
-                ? 'Prüfungstraining'
-                : (navigation.find((n) => n.id === page)?.label ??
-                  (page === 'progress' ? 'Fortschritt' : 'Material & Quellen'))}
-            </strong>
+            {page === 'learn' && topic ? (
+              <>
+                <button onClick={() => navigate('learn')}>Lektionen</button>
+                <ChevronRight size={14} />
+                <span>{topics.find((t) => t.id === topic)?.title}</span>
+              </>
+            ) : (
+              <span>{pageNames[page]}</span>
+            )}
           </div>
           <div className="topbar-actions">
-            <span className="saved-indicator">
-              <ShieldCheck size={15} />
-              {warning ? 'Speichern prüfen' : 'Lokal gespeichert'}
-            </span>
             <button
-              className={`focus-button ${timer !== null ? 'running' : ''}`}
+              className="quick-search"
               onClick={() => {
-                setTimerDone(false);
-                setTimer(timer === null ? 25 * 60 : null);
+                navigate('learn');
+                setTimeout(() => searchRef.current?.focus(), 0);
               }}
-              aria-label={timer !== null ? 'Fokuszeit beenden' : '25 Minuten Fokuszeit starten'}
             >
-              <Clock3 size={16} />
-              {timer !== null
-                ? `${Math.floor(timer / 60)
-                    .toString()
-                    .padStart(2, '0')}:${(timer % 60).toString().padStart(2, '0')}`
-                : 'Fokuszeit'}
-              {timer !== null && <X size={13} />}
+              <Search size={16} />
+              <span>Thema suchen</span>
+              <kbd>Ctrl K</kbd>
             </button>
             <button
-              className="icon-button theme-switch"
+              className={`focus-button ${deadline !== null ? 'running' : ''}`}
+              onClick={() => {
+                setTimerDone(false);
+                setDeadline(deadline === null ? Date.now() + 25 * 60 * 1000 : null);
+              }}
+              aria-label={deadline !== null ? 'Fokuszeit beenden' : '25 Minuten Fokuszeit starten'}
+            >
+              <Clock3 size={16} />
+              {deadline !== null
+                ? `${Math.floor(remaining / 60)
+                    .toString()
+                    .padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`
+                : '25 Min.'}
+            </button>
+            <button
+              className="theme-switch icon-button"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               aria-label={theme === 'light' ? 'Dunkelmodus aktivieren' : 'Hellmodus aktivieren'}
             >
-              {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <div className="avatar" title="Dein lokales Lernprofil">
-              DU
-            </div>
           </div>
         </header>
         <main id="main-content" ref={mainRef} tabIndex={-1}>
@@ -320,7 +394,7 @@ export default function App() {
           {timerDone && (
             <div className="notice" role="status">
               <Coffee size={20} />
-              25 Minuten geschafft. Zeit für eine kurze Pause!
+              25 Minuten sind um. Mach eine kurze Pause.
               <button
                 className="icon-button"
                 aria-label="Hinweis schliessen"
@@ -331,859 +405,396 @@ export default function App() {
             </div>
           )}
           {page === 'dashboard' && (
-            <>
-              <div className="page-heading">
-                <div>
-                  <p className="eyebrow">KLEINE SCHRITTE. GROSSE AHA-MOMENTE.</p>
-                  <h1>
-                    Verstehen statt auswendig lernen<span>.</span>
-                  </h1>
-                  <p>Dein Weg durch die Telematik. Ein Thema nach dem anderen.</p>
-                </div>
-                <span className="label-pill desktop-label">
-                  <span className="status-light" />
-                  14 Themen · dein Tempo
-                </span>
-              </div>
-              <section className="hero">
-                <div className="hero-copy">
-                  <span className="hero-label">
-                    <Sparkles size={14} />
-                    DEIN NÄCHSTER LERNSCHRITT
-                  </span>
-                  <h2>
-                    {completed === 14 ? (
-                      'Alles durch? Jetzt anwenden.'
-                    ) : next.id === 'binary' ? (
-                      <>
-                        Jedes Netzwerk beginnt
-                        <br />
-                        mit einem kleinen Bit.
-                      </>
-                    ) : (
-                      next.title
-                    )}
-                  </h2>
-                  <p>
-                    {completed === 14
-                      ? 'Wiederhole deine Fehler oder stelle dich dem gemischten Prüfungstraining.'
-                      : next.id === 'binary'
-                        ? 'Von 0 und 1 zu IP-Adressen: Baue dir ein Fundament, auf dem der Rest plötzlich Sinn ergibt.'
-                        : next.subtitle +
-                          '. Verstehe die Grundlagen, probiere sie aus und teste dein Wissen.'}
-                  </p>
-                  <div className="hero-actions">
-                    <button
-                      className="button lime"
-                      onClick={() => (completed === 14 ? navigate('exam') : openTopic(next.id))}
-                    >
-                      {completed === 14 ? 'Prüfungstraining starten' : 'Weiterlernen'}
-                      <ArrowRight size={17} />
-                    </button>
-                    <span>
-                      <Clock3 size={15} />
-                      {next.duration} Min. Lese- & Übungszeit
-                    </span>
-                  </div>
-                </div>
-                <NetworkArtwork />
-              </section>
-              <div className="stats-grid">
-                <Stat
-                  icon={<BookOpen size={21} />}
-                  label="Dein Lernpfad"
-                  value={
-                    <>
-                      {completed}
-                      <small> / 14</small>
-                    </>
-                  }
-                  note="Lektionen abgeschlossen"
-                />
-                <Stat
-                  icon={<Target size={21} />}
-                  label="Aktiv geübt"
-                  value={automatic.length.toString()}
-                  note="automatisch geprüfte Antworten"
-                />
-                <Stat
-                  icon={<TrendingUp size={21} />}
-                  label="Deine Trefferquote"
-                  value={
-                    automatic.length ? `${Math.round((correct / automatic.length) * 100)}%` : '–'
-                  }
-                  note={
-                    automatic.length
-                      ? `${correct} von ${automatic.length} Antworten richtig`
-                      : 'Starte deine erste Lernrunde'
-                  }
-                />
-                <div className="card stat-card progress-stat">
-                  <div
-                    className="progress-ring"
-                    style={{ '--progress': `${percent * 3.6}deg` } as React.CSSProperties}
-                  >
-                    <span>
-                      {percent}
-                      <small>%</small>
-                    </span>
-                  </div>
-                  <div>
-                    <h3>Schritt für Schritt.</h3>
-                    <p>
-                      {completed === 0
-                        ? 'Dein erster Aha-Moment wartet.'
-                        : completed === 14
-                          ? 'Alle Lektionen abgeschlossen!'
-                          : 'Jede Lektion bringt dich weiter.'}
-                    </p>
-                    <button className="text-button" onClick={() => navigate('progress')}>
-                      Fortschritt ansehen
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="dashboard-lower">
-                <section>
-                  <div className="section-heading">
-                    <div>
-                      <p className="eyebrow">DEIN WISSEN WÄCHST</p>
-                      <h2>Entdecke deinen Lernpfad</h2>
-                    </div>
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        setTopic(null);
-                        navigate('learn');
-                      }}
-                    >
-                      Alle 14 Themen
-                      <ArrowRight size={15} />
-                    </button>
-                  </div>
-                  <div className="topic-grid dashboard-topics">
-                    {topics.slice(0, 6).map((t, i) => (
-                      <TopicCard
-                        key={t.id}
-                        topic={t}
-                        index={i}
-                        completed={progress.completed.includes(t.id)}
-                        onClick={() => openTopic(t.id)}
-                      />
-                    ))}
-                  </div>
-                </section>
-                <aside className="dashboard-right">
-                  <section className="lab-promo">
-                    <div className="lab-icon">
-                      <FlaskConical size={25} />
-                    </div>
-                    <span className="eyebrow">WENIGER GRÜBELN. MEHR MACHEN.</span>
-                    <h2>
-                      Subnetting?
-                      <br />
-                      Klickt gleich.
-                    </h2>
-                    <p>Bits umschalten, Netzgrenzen sehen und den Rechenweg verstehen.</p>
-                    <div className="mini-bits">
-                      <span>1</span>
-                      <span>1</span>
-                      <span>0</span>
-                      <span>0</span>
-                      <i>/26</i>
-                    </div>
-                    <button className="button primary" onClick={() => navigate('trainer')}>
-                      Ab ins Netzwerk-Labor
-                      <ArrowUpRight size={17} />
-                    </button>
-                  </section>
-                  <div className="study-tip">
-                    <LightbulbIcon />
-                    <div>
-                      <h3>Ein kleiner Lerntipp</h3>
-                      <p>
-                        Erkläre nach jeder Lektion einen Begriff laut, ohne nachzulesen. Das ist
-                        aktives Erinnern.
-                      </p>
-                    </div>
-                  </div>
-                </aside>
-              </div>
-            </>
+            <HomePage
+              next={next}
+              progress={viewProgress}
+              openTopic={openTopic}
+              navigate={navigate}
+            />
           )}
           {page === 'learn' &&
             (topic ? (
-              <Lesson
-                topic={topics.find((t) => t.id === topic) ?? topics[0]}
-                completed={progress.completed.includes(topic)}
-                onBack={() => setTopic(null)}
-                onComplete={() => toggleCompleted(topic)}
-                onQuiz={() => {
-                  setQuizTopic(topic);
-                  navigate('quiz');
-                }}
+              <GuidedLesson
+                key={topic}
+                topic={topics.find((t) => t.id === topic)!}
+                stepIndex={route.step ?? 0}
+                passedSteps={progress.lessonSteps?.[topic] ?? []}
+                onStepChange={studyStep}
+                onUnderstand={(stepId) => stepUnderstood(topic, stepId)}
+                onComplete={() => completeLesson(topic)}
+                onBack={() => navigate('learn')}
+                onQuiz={() => requestNavigation({ page: 'quiz', topic })}
                 onTrainer={() => navigate('trainer')}
-                onNext={() => {
-                  const i = topics.findIndex((t) => t.id === topic);
-                  setTopic(topics[(i + 1) % 14].id);
-                  window.scrollTo(0, 0);
-                }}
+                onNextTopic={nextTopic ? () => openTopic(nextTopic.id, 0) : undefined}
               />
             ) : (
-              <>
-                <div className="page-heading">
-                  <div>
-                    <p className="eyebrow">VOM FUNDAMENT ZUM ZUSAMMENHANG</p>
-                    <h1>
-                      Dein Lernpfad<span>.</span>
-                    </h1>
-                    <p>14 Themen. Eine verständliche Reihenfolge. Dein eigenes Tempo.</p>
-                  </div>
-                  <span className="label-pill">{completed} von 14 abgeschlossen</span>
-                </div>
-                <div className="search-box">
-                  <Search size={19} />
-                  <input
-                    aria-label="Themen suchen"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Thema oder Begriff suchen …"
-                  />
-                  {search && (
-                    <button
-                      className="icon-button"
-                      aria-label="Suche leeren"
-                      onClick={() => setSearch('')}
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </div>
-                <div className="topic-grid learning-grid">
-                  {topics
-                    .map((t, i) => ({ t, i }))
-                    .filter(({ t }) =>
-                      `${t.title} ${t.subtitle} ${t.paragraphs.join(' ')}`
-                        .toLowerCase()
-                        .includes(search.toLowerCase()),
-                    )
-                    .map(({ t, i }) => (
-                      <TopicCard
-                        key={t.id}
-                        topic={t}
-                        index={i}
-                        completed={progress.completed.includes(t.id)}
-                        onClick={() => setTopic(t.id)}
-                      />
-                    ))}
-                </div>
-                {!topics.some((t) =>
-                  `${t.title} ${t.subtitle} ${t.paragraphs.join(' ')}`
-                    .toLowerCase()
-                    .includes(search.toLowerCase()),
-                ) && (
-                  <div className="empty-state">
-                    Kein Thema gefunden. Versuche einen allgemeineren Begriff.
-                  </div>
-                )}
-              </>
+              <Curriculum
+                search={search}
+                setSearch={setSearch}
+                searchRef={searchRef}
+                progress={viewProgress}
+                openTopic={openTopic}
+              />
             ))}
-          {page === 'trainer' && <Trainer />}
+          {page === 'trainer' && (
+            <>
+              <Trainer />
+              <div className="trainer-learning-link">
+                <BookOpen size={19} />
+                <div>
+                  <strong>Die Rechnung ist noch unklar?</strong>
+                  <p>Die Lektion erklärt zuerst, was Netzadresse, Maske und Broadcast bedeuten.</p>
+                </div>
+                <button className="button secondary" onClick={() => openTopic('subnetting', 0)}>
+                  Subnetting lernen
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
           {(page === 'quiz' || page === 'exam' || page === 'mistakes') && (
             <Quiz
-              key={`${page}-${quizTopic}`}
+              key={`${page}-${topic ?? 'all'}`}
               onAnswer={record}
               mistakes={progress.mistakes}
               initialMode={page === 'exam' ? 'exam' : page === 'mistakes' ? 'mistakes' : 'practice'}
-              initialTopic={quizTopic}
+              initialTopic={topic ?? 'all'}
+              onSessionChange={setSessionActive}
+              onStudyTopic={(id) => openTopic(id, 0)}
             />
           )}
-          {page === 'simulations' && <Simulations />}
+          {page === 'simulations' && <SimulationsPage />}
           {page === 'progress' && (
             <ProgressPage progress={progress} setProgress={setProgress} openTopic={openTopic} />
           )}
           {page === 'sources' && <Sources />}
           <footer className="main-footer">
-            <span>Mit Neugier lernt es sich leichter.</span>
-            <span>Telematik verstehen · Für deinen nächsten Aha-Moment.</span>
+            <span>Telematik verstehen</span>
+            <span>Lernskript · 14 Themen · ohne Anmeldung</span>
           </footer>
         </main>
       </div>
-    </div>
-  );
-}
-function Stat({
-  icon,
-  label,
-  value,
-  note,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: ReactNode;
-  note: string;
-}) {
-  return (
-    <div className="card stat-card">
-      <div className="stat-top">
-        <span>{label}</span>
-        <span className="stat-icon">{icon}</span>
-      </div>
-      <strong className="stat-value">{value}</strong>
-      <p>{note}</p>
-    </div>
-  );
-}
-function LightbulbIcon() {
-  return <span className="tip-symbol">✳</span>;
-}
-function NetworkArtwork() {
-  return (
-    <div className="network-art" aria-hidden="true">
-      <div className="art-grid" />
-      <svg className="art-lines" viewBox="0 0 420 270">
-        <path d="M68 81 H190 V135 H322 M190 135 V222 H278 M190 135 V44 H294" />
-        <circle cx="190" cy="135" r="5" />
-        <circle cx="190" cy="81" r="4" />
-        <circle cx="190" cy="222" r="4" />
-      </svg>
-      <div className="art-node node-laptop">
-        <div className="laptop-screen">
-          <div />
-          <span>01001101</span>
-          <i />
-        </div>
-        <div className="laptop-base" />
-        <span className="art-caption">DEIN NOTEBOOK</span>
-      </div>
-      <div className="art-node node-router">
-        <div className="router-box">
-          <Network size={28} />
-          <div>
-            <i />
-            <i />
-            <i />
-          </div>
-        </div>
-        <span className="art-caption">GATEWAY</span>
-      </div>
-      <div className="art-node node-cloud">
-        <div className="cloud-icon">☁</div>
-        <span className="art-caption">INTERNET</span>
-      </div>
-      <div className="art-chip chip-ip">
-        <span className="status-light" />
-        192.168.1.77<span>/26</span>
-      </div>
-      <div className="art-chip chip-bits">0 1 0 0 1 1 0 1</div>
-      <div className="art-orbit orbit-one" />
-      <div className="art-orbit orbit-two" />
-    </div>
-  );
-}
-function TopicCard({
-  topic: t,
-  index,
-  completed,
-  onClick,
-}: {
-  topic: Topic;
-  index: number;
-  completed: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button className={`topic-card ${completed ? 'is-completed' : ''}`} onClick={onClick}>
-      <div className="topic-top">
-        <span className={`topic-number ${t.tag === 'Fokus' ? 'focus-number' : ''}`}>
-          {completed ? <Check size={20} /> : String(index + 1).padStart(2, '0')}
-        </span>
-        <span className={`topic-tag ${t.tag === 'Fokus' ? 'focus-tag' : ''}`}>
-          {completed ? 'Abgeschlossen' : t.tag}
-        </span>
-        <ArrowUpRight size={17} className="topic-arrow" />
-      </div>
-      <h3>{t.title}</h3>
-      <p>{t.subtitle}</p>
-      <div className="topic-meta">
-        <Clock3 size={13} />
-        {t.duration} Min.
-        <span className="topic-meta-dot" />
-        {questions.filter((q) => q.topic === t.id).length} Übungen
-      </div>
-    </button>
-  );
-}
-function Lesson({
-  topic: t,
-  completed,
-  onBack,
-  onComplete,
-  onQuiz,
-  onTrainer,
-  onNext,
-}: {
-  topic: Topic;
-  completed: boolean;
-  onBack: () => void;
-  onComplete: () => void;
-  onQuiz: () => void;
-  onTrainer: () => void;
-  onNext: () => void;
-}) {
-  const [example, setExample] = useState(true);
-  return (
-    <>
-      <button className="text-button back-button" onClick={onBack}>
-        <ArrowLeft size={16} />
-        Zum Lernpfad
-      </button>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">
-            LEKTION {String(topics.indexOf(t) + 1).padStart(2, '0')} / 14 · {t.tag.toUpperCase()}
-          </p>
-          <h1>
-            {t.title}
-            <span>.</span>
-          </h1>
-          <p>{t.subtitle}</p>
-        </div>
-        <span className="label-pill">
-          <Clock3 size={15} />
-          {t.duration} Minuten
-        </span>
-      </div>
-      <div className="lesson-layout">
-        <article className="card lesson-content">
-          <div className="learning-goal">
-            <span className="icon-tile sage">
-              <Target size={23} />
-            </span>
-            <div>
-              <p className="eyebrow">DAS KANNST DU DANACH</p>
-              <p>{t.goal}</p>
-            </div>
-          </div>
-          <h2>Schritt für Schritt verstehen</h2>
-          {t.paragraphs.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-          <div className="worked-example">
-            <button onClick={() => setExample(!example)} aria-expanded={example}>
-              <span>
-                <FlaskConical size={19} />
-                Ein konkretes Beispiel
-              </span>
-              <span>{example ? '−' : '+'}</span>
-            </button>
-            {example && <p>{t.example}</p>}
-          </div>
-          <h2>Hier stolpern viele</h2>
-          <ul className="mistake-list">
-            {t.mistakes.map((m) => (
-              <li key={m}>{m}</li>
-            ))}
-          </ul>
-          <div className="takeaway">
-            <Sparkles size={21} />
-            <div>
-              <h3>Das nimmst du mit</h3>
-              <p>{t.takeaway}</p>
-            </div>
-          </div>
-          <div className="lesson-source">
-            Quelle: Telematik-Lernskript, Seite {t.page}. Fachliche Präzisierungen auf Seite 20.
-            Originalhandouts liegen diesem Projekt nicht vor.
-          </div>
-          <div className="lesson-actions">
-            <button
-              className={`button ${completed ? 'secondary' : 'primary'}`}
-              onClick={onComplete}
-            >
-              <CheckCircle2 size={17} />
-              {completed ? 'Als offen markieren' : 'Lektion abschliessen'}
-            </button>
-            <button className="button secondary" onClick={onNext}>
-              Nächstes Thema
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </article>
-        <aside>
-          <section className="card lesson-practice">
-            <div className="icon-tile peach">
-              <Target size={24} />
-            </div>
-            <h2>Jetzt bist du dran.</h2>
-            <p>
-              Teste dein Verständnis mit fünf Fragen zu diesem Thema. Lösungen bleiben zuerst
-              verborgen.
-            </p>
-            <button className="button primary" onClick={onQuiz}>
-              Wissen testen
-              <ArrowRight size={16} />
-            </button>
-            {['binary', 'ipv4', 'subnetting', 'addressing'].includes(t.id) && (
-              <button className="button secondary" onClick={onTrainer}>
-                <FlaskConical size={16} />
-                Im Labor ausprobieren
-              </button>
-            )}
-          </section>
-          <div className="study-tip">
-            <LightbulbIcon />
-            <div>
-              <h3>Wirklich verstanden?</h3>
-              <p>
-                Schliesse die Lektion erst ab, wenn du die Kernaussage ohne Vorlage erklären kannst.
-              </p>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </>
-  );
-}
-function Simulations() {
-  const [selected, setSelected] = useState('web');
-  const [step, setStep] = useState(0);
-  const sim = simulations.find((s) => s.id === selected)!;
-  const s = sim.steps[step];
-  return (
-    <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">DAS GROSSE GANZE</p>
-          <h1>
-            So hängt alles zusammen<span>.</span>
-          </h1>
-          <p>Gehe einen Netzwerkablauf Schritt für Schritt durch. Ohne echte Netzwerkanfragen.</p>
-        </div>
-      </div>
-      <div className="tabs" role="tablist" aria-label="Ablauf auswählen">
-        {simulations.map((s) => (
+      <dialog
+        ref={dialogRef}
+        className="leave-dialog"
+        aria-labelledby="leave-title"
+        aria-describedby="leave-description"
+        onCancel={(e) => {
+          e.preventDefault();
+          setPendingRoute(null);
+        }}
+      >
+        <h2 id="leave-title">Lernrunde verlassen?</h2>
+        <p id="leave-description">
+          Deine bisherigen Antworten bleiben gespeichert. Die laufende Runde endet, wenn du die
+          Seite wechselst.
+        </p>
+        <div className="dialog-actions">
+          <button className="button secondary" autoFocus onClick={() => setPendingRoute(null)}>
+            Weiter üben
+          </button>
           <button
-            role="tab"
-            aria-selected={s.id === selected}
-            className={s.id === selected ? 'active' : ''}
-            key={s.id}
+            className="button primary"
             onClick={() => {
-              setSelected(s.id);
-              setStep(0);
+              const next = pendingRoute;
+              setPendingRoute(null);
+              sessionRef.current = false;
+              setSessionActive(false);
+              if (next) applyRoute(next);
             }}
           >
-            {s.id === 'web' ? 'Website öffnen' : s.id.toUpperCase()}
+            Runde verlassen
           </button>
-        ))}
-      </div>
-      <section className="card simulation-card">
-        <div className="section-top">
-          <div>
-            <p className="eyebrow">INTERAKTIVER ABLAUF</p>
-            <h2>{sim.title}</h2>
-            <p>{sim.subtitle}</p>
-          </div>
-          <span className="label-pill">
-            Schritt {step + 1} von {sim.steps.length}
-          </span>
         </div>
-        <div className="step-timeline">
-          {sim.steps.map((s, i) => (
-            <button
-              key={s[0]}
-              onClick={() => setStep(i)}
-              className={i === step ? 'current' : i < step ? 'past' : ''}
-              aria-label={`Schritt ${i + 1}: ${s[0]}`}
-              aria-current={i === step ? 'step' : undefined}
-            >
-              {i < step ? <Check size={18} /> : i + 1}
-            </button>
-          ))}
-        </div>
-        <div className="simulation-stage">
-          <Waypoints size={42} />
-          <h2>{s[0]}</h2>
-          <p>{s[1]}</p>
-          <div className="packet-flow">
-            <span className="status-light" />
-            <code>{s[2]}</code>
-          </div>
-        </div>
-        <div className="section-top">
-          <button
-            className="button secondary"
-            disabled={step === 0}
-            onClick={() => setStep(step - 1)}
-          >
-            <ArrowLeft size={16} />
-            Zurück
-          </button>
-          {step === sim.steps.length - 1 ? (
-            <button className="button primary" onClick={() => setStep(0)}>
-              Noch einmal
-              <RotateCcw size={16} />
-            </button>
-          ) : (
-            <button className="button primary" onClick={() => setStep(step + 1)}>
-              Nächster Schritt
-              <ArrowRight size={16} />
-            </button>
-          )}
-        </div>
-      </section>
-      <div className="notice">
-        Vereinfachte Lernmodelle: Caches, Protokollvarianten und lokale Konfiguration können den
-        tatsächlichen Ablauf verändern.
-      </div>
-    </>
+      </dialog>
+    </div>
   );
 }
-function ProgressPage({
+function HomePage({
+  next,
   progress,
-  setProgress,
   openTopic,
+  navigate,
 }: {
+  next: Topic;
   progress: Progress;
-  setProgress: (p: Progress) => void;
-  openTopic: (id: string) => void;
+  openTopic: (id: string, step?: number) => void;
+  navigate: (page: Page) => void;
 }) {
-  const [status, setStatus] = useState('');
-  const [reset, setReset] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
-  function exportProgress() {
-    const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `telematik-fortschritt-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setStatus('Dein Export wurde zum Download vorbereitet. Bewahre die Datei als Sicherung auf.');
-  }
-  async function importProgress(file: File) {
-    try {
-      if (file.size > 5_000_000) throw new Error('Die Datei ist zu gross (maximal 5 MB).');
-      const incoming = validateProgress(JSON.parse(await file.text()));
-      setProgress({
-        completed: [...new Set([...progress.completed, ...incoming.completed])],
-        mistakes: [...new Set([...progress.mistakes, ...incoming.mistakes])],
-        attempts: [
-          ...new Map(
-            [...progress.attempts, ...incoming.attempts].map((a) => [`${a.id}-${a.date}`, a]),
-          ).values(),
-        ],
-      });
-      setStatus('Fortschritt importiert und mit deinem vorhandenen Stand zusammengeführt.');
-    } catch (e) {
-      setStatus(e instanceof Error ? e.message : 'Import nicht möglich.');
-    }
-  }
-  const auto = progress.attempts.filter((a) => !a.self);
+  const completed = progress.completed.length,
+    started = !!progress.lastLesson || completed > 0,
+    allDone = completed >= 14;
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">DEIN WISSEN SICHTBAR MACHEN</p>
-          <h1>
-            Jeder Schritt zählt<span>.</span>
-          </h1>
-          <p>Ein ehrlicher Blick auf deinen Lernstand. Alles bleibt in deinem Browser.</p>
-        </div>
-        <button className="button secondary" onClick={exportProgress}>
-          <Download size={17} />
-          Fortschritt sichern
-        </button>
-      </div>
-      <div className="stats-grid three-stats">
-        <Stat
-          label="Lektionen"
-          icon={<BookOpen size={21} />}
-          value={`${topics.filter((t) => progress.completed.includes(t.id)).length}/14`}
-          note="von dir als abgeschlossen markiert"
-        />
-        <Stat
-          label="Geprüfte Antworten"
-          icon={<Target size={21} />}
-          value={auto.length.toString()}
-          note={`${auto.filter((a) => a.correct).length} richtig · ${auto.filter((a) => !a.correct).length} noch üben`}
-        />
-        <Stat
-          label="Selbstkontrolle"
-          icon={<CheckCircle2 size={21} />}
-          value={progress.attempts.filter((a) => a.self).length.toString()}
-          note="Erklärfragen von dir selbst eingeschätzt"
-        />
-      </div>
-      <section className="card">
-        <h2>Deine Themen im Überblick</h2>
-        <p>Trefferquoten beziehen sich auf alle bisherigen automatisch geprüften Versuche.</p>
-        <div className="progress-topic-list">
-          {topics.map((t) => {
-            const a = auto.filter(
-              (a) =>
-                a.id.startsWith(t.id + '-') ||
-                (t.id === 'subnetting' && a.id.startsWith('generated:')),
-            );
-            const percent = a.length
-              ? Math.round((a.filter((v) => v.correct).length / a.length) * 100)
-              : 0;
-            return (
-              <button key={t.id} onClick={() => openTopic(t.id)}>
-                <span
-                  className={`completion-dot ${progress.completed.includes(t.id) ? 'done' : ''}`}
-                >
-                  {progress.completed.includes(t.id) ? <Check size={13} /> : null}
-                </span>
-                <span className="grow">{t.title}</span>
-                <span className="progress-track">
-                  <span style={{ width: `${percent}%` }} />
-                </span>
-                <strong>{a.length ? `${percent}%` : '–'}</strong>
-                <span className="caption">{a.length} Versuche</span>
-                <ChevronRight size={16} />
-              </button>
-            );
-          })}
-        </div>
-      </section>
-      <section className="card data-card">
-        <h2>Dein Fortschritt gehört dir.</h2>
+      <div className="home-heading">
+        <p className="section-kicker">LERNÜBERSICHT</p>
+        <h1>Telematik</h1>
         <p>
-          Ein Browserwechsel, private Fenster oder das Löschen von Browserdaten können deinen Stand
-          entfernen. Exportiere eine Sicherung; importierte Daten werden zusammengeführt.
+          14 Themen mit kurzen Erklärungen, Beispielen und Übungen. Beginne bei den Grundlagen oder
+          wähle ein bestimmtes Thema.
         </p>
-        <div className="data-actions">
-          <button className="button secondary" onClick={exportProgress}>
-            <ArrowDownToLine size={16} />
-            Exportieren
+      </div>
+      <div className="home-start-grid">
+        <section className="start-lesson">
+          <div className="start-top">
+            <span className="chapter-label">
+              {allDone ? 'Zum Abschluss' : started ? 'Hier geht es weiter' : 'Fang hier an'}
+            </span>
+            <span className="caption">
+              {allDone ? '14 Fragen' : `${learningSteps[next.id].length} kurze Schritte`}
+            </span>
+          </div>
+          <h2>{allDone ? 'Gemischter Wissenstest' : (friendlyTitles[next.id] ?? next.title)}</h2>
+          <p>
+            {allDone
+              ? 'Eine gemischte Runde zeigt dir, was du schon kannst und welche Themen noch eine Wiederholung brauchen.'
+              : started
+                ? next.goal
+                : 'Was passiert, wenn dein Notebook eine Website öffnet? Lerne zuerst, welche Geräte dabei helfen und was jedes davon macht.'}
+          </p>
+          <button
+            className="button primary"
+            onClick={() => (allDone ? navigate('exam') : openTopic(next.id))}
+          >
+            {allDone ? 'Prüfungstraining starten' : started ? 'Weiterlernen' : 'Grundlagen starten'}
+            <ArrowRight size={17} />
           </button>
-          <button className="button secondary" onClick={() => fileInput.current?.click()}>
-            <Upload size={16} />
-            Sicherung importieren
-          </button>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="application/json,.json"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void importProgress(file);
-              e.target.value = '';
-            }}
-          />
-          <button className="button ghost danger" onClick={() => setReset(true)}>
-            Fortschritt zurücksetzen
-          </button>
+          <div className="start-footnote">
+            <BookOpen size={14} />
+            {allDone
+              ? 'Ohne Zeitdruck, mit Erklärungen.'
+              : 'Dein Lernstand wird nach jeder Antwort gespeichert.'}
+          </div>
+        </section>
+        <section className="how-to-learn">
+          <span className="section-kicker">ABLAUF EINER LEKTION</span>
+          <ol>
+            <li>
+              <span>1</span>
+              <div>
+                <h3>Verstehen</h3>
+                <p>Lies eine kurze Erklärung und schau dir das Beispiel an.</p>
+              </div>
+            </li>
+            <li>
+              <span>2</span>
+              <div>
+                <h3>Ausprobieren</h3>
+                <p>
+                  Beantworte eine kleine Frage. Bei einem Fehler erklären wir den entscheidenden
+                  Punkt.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span>3</span>
+              <div>
+                <h3>Weitergehen</h3>
+                <p>
+                  Erst wenn die Idee klar ist, folgt die nächste. Dein Platz bleibt gespeichert.
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
+      </div>
+      <section className="home-focus">
+        <div className="focus-heading">
+          <span className="section-kicker">DEIN SCHWERPUNKT</span>
+          <h2>IP-Adressen & Subnetting</h2>
+          <p>Adressierung, Netzmasken und Subnetting anhand konkreter Rechnungen.</p>
         </div>
-        {reset && (
-          <div className="notice warning">
-            <span>Alle lokalen Lernstände wirklich löschen? Sichere sie vorher als Export.</span>
-            <button className="button secondary" onClick={() => setReset(false)}>
-              Abbrechen
+        <div className="focus-example">
+          <div className="annotated-ip">
+            <span>
+              192.168.1.<b>77</b>
+            </span>
+            <span>/26</span>
+          </div>
+          <div className="address-annotation">
+            <span>Adresse eines Geräts</span>
+            <span>Grösse des Netzes</span>
+          </div>
+          <div className="focus-example-actions">
+            <button className="text-button" onClick={() => openTopic('ipv4', 0)}>
+              Von vorne erklären
+              <ArrowRight size={15} />
             </button>
-            <button
-              className="button danger-fill"
-              onClick={() => {
-                setProgress({ ...emptyProgress });
-                setReset(false);
-                setStatus('Lokaler Fortschritt zurückgesetzt.');
-              }}
-            >
-              Jetzt löschen
+            <button className="text-button" onClick={() => openTopic('subnetting', 0)}>
+              Subnetting Schritt für Schritt
+              <ArrowRight size={15} />
             </button>
           </div>
-        )}
-        {status && (
-          <p className="notice" role="status">
-            {status}
-          </p>
-        )}
-      </section>
-    </>
-  );
-}
-function Sources() {
-  return (
-    <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">GUTE QUELLEN. KLARE GRENZEN.</p>
-          <h1>
-            Zum Nachlesen & Weiterdenken<span>.</span>
-          </h1>
-          <p>Die Grundlagen hinter deinem Lernraum.</p>
         </div>
-      </div>
-      <section className="card">
-        <h2>Unser Ausgangspunkt</h2>
-        <p>
-          Die Lerninhalte basieren auf dem bereitgestellten{' '}
-          <strong>Telematik-Lernskript (21 Seiten, 15. Oktober 2026)</strong>. Die fachlichen
-          Präzisierungen auf Seite 20 sind berücksichtigt. Die 14 Originalhandouts mit 164 Seiten
-          und ihre Abbildungen wurden diesem Projekt nicht bereitgestellt; ihre vollständige
-          Abdeckung ist deshalb nicht unabhängig geprüft.
-        </p>
-        <p>
-          Diese Website ist ein privates Lernprojekt und kein offizielles Angebot von BBC oder
-          Moodle. Die Fragen sind ergänzende Übungen, keine offiziellen Prüfungsfragen.
-        </p>
       </section>
       <div className="section-heading">
         <div>
-          <p className="eyebrow">ANSCHAUEN. DANN SELBST ERKLÄREN.</p>
-          <h2>Videos aus dem Lernskript</h2>
+          <p className="section-kicker">LEKTIONEN</p>
+          <h2>Themenbereiche</h2>
         </div>
-        <span className="caption">Öffnen erst nach deinem Klick</span>
+        <button className="text-button" onClick={() => navigate('learn')}>
+          Alle Lektionen
+          <ArrowRight size={15} />
+        </button>
       </div>
-      <div className="video-grid">
-        {videos.map(([title, channel, id, goal]) => (
-          <a
-            className="card video-card"
-            href={`https://www.youtube.com/watch?v=${id}`}
-            key={id}
-            target="_blank"
-            rel="noreferrer"
+      <div className="course-overview">
+        {learningGroups.map((group, index) => (
+          <button
+            key={group.id}
+            className="course-group-preview"
+            onClick={() =>
+              openTopic(
+                group.topics.find((id) => !progress.completed.includes(id)) ?? group.topics[0],
+                0,
+              )
+            }
           >
-            <span className="video-play">
-              <Play size={20} />
-            </span>
+            <span className="group-index">0{index + 1}</span>
             <div>
-              <span className="caption">{channel}</span>
-              <h3>{title}</h3>
-              <p>{goal}</p>
+              <h3>{group.title}</h3>
+              <p>{group.description}</p>
+              <span className="caption">
+                {group.topics.filter((id) => progress.completed.includes(id)).length}/
+                {group.topics.length} Lektionen gelesen
+              </span>
             </div>
-            <ExternalLink size={16} />
-          </a>
+            <ArrowRight size={17} />
+          </button>
         ))}
       </div>
-      <p className="caption">
-        Titel, Kanäle und Links wurden aus dem Skript übernommen. Die aktuelle Videoverfügbarkeit
-        wurde hier nicht geprüft; es werden keine Videos automatisch eingebettet.
-      </p>
-      <section className="card sources-card">
-        <h2>Offizielle Referenzen</h2>
-        {[
-          ['RFC 1918 · Private IPv4-Adressen', 'https://www.rfc-editor.org/rfc/rfc1918'],
-          ['RFC 3021 · /31 auf Punkt-zu-Punkt-Links', 'https://www.rfc-editor.org/rfc/rfc3021'],
-          ['RFC 2131 · DHCP', 'https://www.rfc-editor.org/rfc/rfc2131'],
-          ['RFC 9293 · TCP', 'https://www.rfc-editor.org/rfc/rfc9293'],
-          ['RFC 3927 · IPv4 Link-Local', 'https://www.rfc-editor.org/rfc/rfc3927'],
-          ['RFC 6146 · NAT64', 'https://www.rfc-editor.org/rfc/rfc6146'],
-          [
-            'Microsoft · tracert',
-            'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert',
-          ],
-          ['Apple · Private WLAN-Adressen', 'https://support.apple.com/en-us/102509'],
-        ].map(([label, url]) => (
-          <a key={url} href={url} target="_blank" rel="noreferrer">
-            {label}
-            <ExternalLink size={15} />
-          </a>
-        ))}
-      </section>
+      <div className="home-bottom">
+        <span>
+          Bereits gelernt?{' '}
+          <button
+            className="text-button"
+            onClick={() => navigate(progress.mistakes.length ? 'mistakes' : 'quiz')}
+          >
+            {progress.mistakes.length
+              ? `${progress.mistakes.length} Fehler wiederholen`
+              : 'Mit Übungen anfangen'}
+            <ArrowRight size={14} />
+          </button>
+        </span>
+        <button className="text-button" onClick={() => navigate('progress')}>
+          Fortschritt sichern
+          <ArrowRight size={14} />
+        </button>
+      </div>
+    </>
+  );
+}
+function Curriculum({
+  search,
+  setSearch,
+  searchRef,
+  progress,
+  openTopic,
+}: {
+  search: string;
+  setSearch: (s: string) => void;
+  searchRef: React.RefObject<HTMLInputElement | null>;
+  progress: Progress;
+  openTopic: (id: string, step?: number) => void;
+}) {
+  function matches(id: string) {
+    const t = topics.find((t) => t.id === id)!;
+    return `${t.title} ${friendlyTitles[id] ?? ''} ${t.subtitle} ${t.paragraphs.join(' ')}`
+      .toLowerCase()
+      .includes(search.trim().toLowerCase());
+  }
+  const results = topics.filter((t) => matches(t.id)).length;
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <p className="section-kicker">DEIN LERNPFAD</p>
+          <h1>Lektionen</h1>
+          <p>Beginne oben, wenn du neu einsteigst. Oder wähle das Thema, das du gerade brauchst.</p>
+        </div>
+      </div>
+      <div className="curriculum-toolbar">
+        <div className="search-box">
+          <Search size={18} />
+          <input
+            ref={searchRef}
+            aria-label="Themen suchen"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="IP, DHCP, WLAN …"
+          />
+          {search && (
+            <button className="icon-button" aria-label="Suche leeren" onClick={() => setSearch('')}>
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        <span className="caption">
+          {search ? `${results} passende Lektionen` : `${progress.completed.length} von 14 gelesen`}
+        </span>
+      </div>
+      <div className="curriculum">
+        {learningGroups
+          .filter((g) => g.topics.some(matches))
+          .map((group, index) => (
+            <section className="curriculum-group" key={group.id}>
+              <div className="curriculum-group-heading">
+                <span className="group-index">0{learningGroups.indexOf(group) + 1}</span>
+                <div>
+                  <h2>{group.title}</h2>
+                  <p>{group.description}</p>
+                </div>
+              </div>
+              <div className="lesson-list">
+                {group.topics.filter(matches).map((id) => {
+                  const t = topics.find((t) => t.id === id)!,
+                    done = progress.completed.includes(id),
+                    passed = learningSteps[id].filter((s) =>
+                      progress.lessonSteps?.[id]?.includes(s.id),
+                    ).length;
+                  return (
+                    <button
+                      className={`lesson-row ${done ? 'is-completed' : ''}`}
+                      key={id}
+                      onClick={() => openTopic(id)}
+                    >
+                      <span className="lesson-status">
+                        {done ? (
+                          <Check size={17} />
+                        ) : (
+                          String(courseTopics().findIndex((t) => t.id === id) + 1).padStart(2, '0')
+                        )}
+                      </span>
+                      <div className="lesson-row-title">
+                        <h3>{friendlyTitles[id] ?? t.title}</h3>
+                        <p>
+                          {t.title} · {learningSteps[id].length} kurze Schritte
+                        </p>
+                      </div>
+                      <span className="lesson-row-progress">
+                        {done
+                          ? 'Gelesen'
+                          : passed
+                            ? `${passed}/${learningSteps[id].length} verstanden`
+                            : 'Noch offen'}
+                      </span>
+                      <ChevronRight size={18} />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+      </div>
+      {!results && (
+        <div className="empty-state">
+          <Search size={24} />
+          <h2>Kein passendes Thema.</h2>
+          <p>Versuche einen anderen Begriff, zum Beispiel «IP» oder «DNS».</p>
+          <button className="button secondary" onClick={() => setSearch('')}>
+            Alle Lektionen zeigen
+          </button>
+        </div>
+      )}
     </>
   );
 }
