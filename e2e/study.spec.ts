@@ -358,19 +358,17 @@ test('importing an old backup does not resurrect a resolved mistake', async ({ p
     ),
   );
   await page.goto('/#progress');
-  await page
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'older.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(
-        JSON.stringify({
-          completed: [],
-          mistakes: ['binary-1'],
-          attempts: [{ id: 'binary-1', correct: false, date: '2026-10-15T12:00:00Z' }],
-        }),
-      ),
-    });
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'older.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        completed: [],
+        mistakes: ['binary-1'],
+        attempts: [{ id: 'binary-1', correct: false, date: '2026-10-15T12:00:00Z' }],
+      }),
+    ),
+  });
   await expect(page.getByRole('status')).toContainText('importiert');
   await expect
     .poll(() =>
