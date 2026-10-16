@@ -1,8 +1,10 @@
 # Die App öffnen und weitergeben
 
-## Aktueller Zugang
+## Website öffnen
 
-Für die vorgesehene Schuladresse `https://uncryptobull.github.io/study-website-bbc/` wurde eine GitHub-Pages-404-Seite gemeldet. Verwende zum Lernen die fertige Datei unten. Der Dateidownload funktioniert unabhängig von GitHub Pages. Die Einrichtung der Website ist weiter unten beschrieben; teile ihre Adresse erst nach einer erfolgreichen Veröffentlichung und einem tatsächlichen Aufruf der App.
+**https://uncryptobull.github.io/study-website-bbc/**
+
+GitHub hat die manuell gestartete Veröffentlichung für Commit `965d8eb` mit erfolgreichen **build**- und **deploy**-Schritten bestätigt. Zum Lernen reicht ein Browser; es ist keine Installation nötig. Die fertige Datei unten ist eine zusätzliche Möglichkeit für Offline-Zugang.
 
 ## Die fertige Datei direkt herunterladen
 
@@ -34,11 +36,11 @@ Datei-Downloads und lokale Datei-URLs können auf verwalteten Schul-/Arbeitsger�
 
 ## Eine Website mit GitHub Pages
 
-Die Bereitstellung ist als Workflow **Publish study site** vorbereitet. Die App braucht auch online kein Backend und keine Anmeldung. Der Website-Link ist nicht allein durch das Speichern dieses Workflows aktiv.
+Die Website wird mit dem Workflow **Publish study site** veröffentlicht. Die App braucht auch online kein Backend und keine Anmeldung. GitHub Pages ist eingerichtet; die manuelle Veröffentlichung wurde erfolgreich abgeschlossen.
 
-Die geprüften bisherigen **Publish study site**-Läufe wurden als **skipped** angezeigt. Ein übersprungener Lauf veröffentlicht keine Website. Der Workflow wartet bei normalen Pushes darauf, dass GitHub Pages für das Repository als aktiviert gemeldet wird; ein Administrator kann ihn nach der Einrichtung manuell starten.
+Die früheren automatischen Läufe wurden vor der Einrichtung als **skipped** angezeigt. Nach der Einrichtung hat ein manueller Lauf erfolgreich veröffentlicht. Weitere Pushes starten die Veröffentlichung, wenn GitHub Pages als aktiviert gemeldet wird; bei Bedarf kann sie manuell gestartet werden.
 
-Ein Repository-Administrator muss einmal:
+Bei einer erneuten Einrichtung oder zur manuellen Veröffentlichung:
 
 1. Im GitHub-Projekt **Settings → Pages** öffnen und bei **Source** die Option **GitHub Actions** wählen.
 2. Unter **Actions → Publish study site → Run workflow** die Veröffentlichung starten.

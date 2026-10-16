@@ -12,7 +12,13 @@ Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer und �
 
 ## Öffnen: keine Installation nötig
 
-Zum Lernen brauchst du **kein Node.js und kein Terminal**. Lade die fertige HTML-Datei herunter und öffne sie im Browser. Die Website-Adresse ist derzeit noch nicht nutzbar; der Dateidownload funktioniert unabhängig davon.
+Zum Lernen brauchst du nur einen Browser, **kein Node.js und kein Terminal**.
+
+### Website öffnen
+
+**[Telematik verstehen starten](https://uncryptobull.github.io/study-website-bbc/)**
+
+Öffne den Link in Edge, Chrome oder Firefox. Du musst nichts herunterladen oder installieren. GitHub hat die Veröffentlichung mit erfolgreichen **build**- und **deploy**-Schritten bestätigt. Für eine Kopie ohne Internet kannst du in der App oben rechts **Offline-Datei** wählen.
 
 ### Nur die fertige Datei herunterladen
 
@@ -31,10 +37,6 @@ Dieser Dateidownload benötigt kein GitHub Pages. Eine Seite mit «There isn't a
 3. Öffne **Telematik-verstehen.html**. Verwende **nicht `index.html`**: Das ist die Startdatei für die Entwicklung und benötigt einen Entwicklungsserver. Sie zeigt deshalb einen Hinweis mit einem Link zur fertigen Datei.
 
 Falls Windows das ZIP blockiert: Rechtsklick auf das ZIP → **Eigenschaften** → **Zulassen/Blockierung aufheben**, sofern diese Option angezeigt wird, dann erneut entpacken. Einfacher ist der direkte Download der einzelnen HTML-Datei oben. Auf verwalteten Schulgeräten können lokale HTML-Dateien durch Richtlinien gesperrt sein; verwende dann die veröffentlichte Website oder frage die zuständige IT. [Weitere Hinweise zu Zugang und Sicherungen](docs/ACCESS.md).
-
-### Website-Zugang: Veröffentlichung noch offen
-
-Für `https://uncryptobull.github.io/study-website-bbc/` wurde eine GitHub-Pages-404-Seite gemeldet. Verwende zum Lernen vorerst den Dateidownload oben. Ein Administrator muss unter **Settings → Pages → Source** die Option **GitHub Actions** wählen und unter **Actions → Publish study site → Run workflow** veröffentlichen. Teile den Website-Link erst, wenn **build** und **deploy** erfolgreich sind und die App unter der angezeigten Deployment-Adresse geöffnet werden kann. [Einrichtungsschritte](docs/ACCESS.md#eine-website-mit-github-pages).
 
 ![Die Desktop-Übersicht von Telematik verstehen](docs/dashboard-dark.png)
 
