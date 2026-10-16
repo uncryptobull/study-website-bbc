@@ -201,6 +201,24 @@ export function ProgressPage({
           </p>
         )}
       </section>
+      <section className="card">
+        <h2>Deine Daten</h2>
+        <p>
+          Lektionen, Ergebnisse und Einstellungen bleiben in diesem Browser. Die App verwendet keine
+          Analyse- oder Werbedienste. Externe Quellen und Videos öffnen erst nach einem Klick; dabei
+          gelten die Datenschutzregeln der jeweiligen Website.
+        </p>
+        <p>
+          Auf gemeinsam genutzten Geräten können andere Personen mit demselben Browserprofil deinen
+          Lernstand sehen. Sichere ihn bei Bedarf und setze ihn danach zurück. Eine exportierte
+          Fortschrittsdatei enthält Ergebnisse und Zeitpunkte deiner Versuche; gib zum Teilen der
+          App die Offline-HTML-Datei oder den Website-Link weiter.
+        </p>
+        <p>
+          Beim Onlineaufruf verarbeitet GitHub als Hostinganbieter technische Verbindungsdaten,
+          unter anderem die IP-Adresse. Die lokale Offline-Datei benötigt keinen Hostingaufruf.
+        </p>
+      </section>
     </>
   );
 }
@@ -214,7 +232,7 @@ export function Sources() {
           <h1>
             Begriffe und Quellen<span>.</span>
           </h1>
-          <p>Die Grundlagen hinter deinem Lernraum.</p>
+          <p>Begriffe, Videos und technische Referenzen.</p>
         </div>
       </div>
       <section className="glossary-section">

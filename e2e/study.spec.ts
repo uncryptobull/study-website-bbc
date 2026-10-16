@@ -97,8 +97,7 @@ test('wrong answers persist, can be replayed and clear after a correct answer', 
   const q = questions.find((q) => q.prompt === prompt)!;
   if (q.choices)
     await page
-      .locator('.choices button')
-      .filter({ hasText: q.choices.find((c) => c !== q.answer)! })
+      .getByRole('radio', { name: q.choices.find((c) => c !== q.answer)!, exact: true })
       .click();
   else await page.locator('.question-card input').fill(q.id === 'binary-2' ? '00000000' : '0');
   await page.getByRole('button', { name: 'Antwort prüfen' }).click();
@@ -106,7 +105,7 @@ test('wrong answers persist, can be replayed and clear after a correct answer', 
   await page.reload();
   await page.getByRole('button', { name: /Fehler wiederholen/ }).click();
   await page.getByRole('button', { name: 'Lernrunde starten' }).click();
-  if (q.choices) await page.locator('.choices button').filter({ hasText: q.answer }).click();
+  if (q.choices) await page.getByRole('radio', { name: q.answer, exact: true }).click();
   else await page.locator('.question-card input').fill(q.answer);
   await page.getByRole('button', { name: 'Antwort prüfen' }).click();
   await expect(page.getByRole('status')).toContainText('Richtig beantwortet');
@@ -123,7 +122,7 @@ test('mixed exam finishes with a topic breakdown', async ({ page }) => {
   for (let i = 0; i < 14; i++) {
     const prompt = await page.locator('.question-card h2').innerText();
     const q = questions.find((q) => q.prompt === prompt)!;
-    if (q.choices) await page.locator('.choices button').filter({ hasText: q.answer }).click();
+    if (q.choices) await page.getByRole('radio', { name: q.answer, exact: true }).click();
     else await page.locator('.question-card input').fill(q.answer);
     await page.getByRole('button', { name: 'Antwort prüfen' }).click();
     await page

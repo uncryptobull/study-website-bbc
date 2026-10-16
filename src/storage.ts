@@ -62,7 +62,12 @@ export function validateProgress(value: unknown): Progress {
     ...(last ? { lastLesson: { topic: last.topic as string, step: last.step as number } } : {}),
     completed: [...new Set(v.completed)],
     mistakes: [...new Set(v.mistakes)],
-    attempts: v.attempts,
+    attempts: v.attempts.map((attempt: Attempt) => ({
+      id: attempt.id,
+      correct: attempt.correct,
+      date: attempt.date,
+      ...(attempt.self === undefined ? {} : { self: attempt.self }),
+    })),
   };
 }
 export function readProgress(): { progress: Progress; warning: string } {

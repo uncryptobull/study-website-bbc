@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -135,6 +135,7 @@ export function QuestionCard({
               }}
               type="button"
               role="radio"
+              aria-label={choice}
               aria-checked={input === choice}
               tabIndex={input === choice || (!input && i === 0) ? 0 : -1}
               disabled={result !== null}
@@ -354,7 +355,7 @@ export default function Quiz({
     .map(findQuestion)
     .filter((question): question is Question => !!question);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onSessionChange?.(active);
     return () => onSessionChange?.(false);
   }, [active, onSessionChange]);

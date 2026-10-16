@@ -24,6 +24,8 @@ Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer, Übu
 
 Keine Anmeldung, API-Schlüssel oder Backend-Dienste. Die Anwendung lädt keine externen Schriften oder Video-Player; Quellen und Videos öffnen nur nach einem Klick.
 
+Der Lernstand bleibt im Browser. Die produktive App sperrt ausgehende Datenanfragen und übermittelt keinen Referrer. Hinweise zu Hosting, Sicherungen und öffentlichem Quellcode stehen in [docs/PRIVACY.md](docs/PRIVACY.md).
+
 ## Als Link oder Datei benutzen
 
 Zum Lernen brauchst du keine Entwicklungswerkzeuge. Die fertige **Telematik-verstehen.html** enthält die ganze App. Auf einer gehosteten Version kannst du sie mit **Offline-Datei** rechts oben speichern. Antworten und Fortschritt werden nicht in die weitergegebene HTML-Datei eingebettet; eine separate Sicherung lässt sich in der App exportieren.

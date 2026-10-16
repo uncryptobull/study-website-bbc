@@ -21,6 +21,8 @@ Wenn der Lauf erfolgreich ist, zeigt GitHub im Deployment die tatsächliche Webs
 
 GitHub Pages muss für das Repository und den verwendeten GitHub-Tarif verfügbar sein. Der Workflow ändert weder die Sichtbarkeit des Quellcode-Repositories noch Kontoeinstellungen. Die Arbeitssitzung kann Git-Code pushen, hat aber keine nachgewiesene Berechtigung, GitHub-Hosting-Einstellungen zu ändern. Es wurden keine zusätzlichen Zugangsdaten angefordert oder im Projekt gespeichert.
 
+Öffentlicher Quellcode allein aktiviert Pages nicht. Die Standardadresse enthält den öffentlichen GitHub-Benutzernamen. Informationen über Commit-Absender, Browserspeicher und Verbindungsdaten beim Hosting stehen in [PRIVACY.md](PRIVACY.md).
+
 ## Den eigenen Lernstand übertragen
 
 Beim Wechsel vom Website-Link zur lokalen Datei oder auf einen anderen Rechner kann der Browser einen getrennten Speicher verwenden:

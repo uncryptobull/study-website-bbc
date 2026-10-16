@@ -22,6 +22,35 @@ test.afterAll(async () => {
     server.close((error) => (error ? reject(error) : resolve())),
   );
 });
+test('production privacy policy blocks outgoing data requests and omits referrers', async ({
+  page,
+}) => {
+  await page.goto(address);
+  await expect(page.getByRole('heading', { name: 'Telematik', exact: true })).toBeVisible();
+  const policy = await page.evaluate(async () => {
+    const violations: string[] = [];
+    document.addEventListener('securitypolicyviolation', (event) =>
+      violations.push(event.effectiveDirective),
+    );
+    const requestBlocked = await fetch('https://example.invalid/privacy-check').then(
+      () => false,
+      () => true,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    return {
+      requestBlocked,
+      violations,
+      referrer: document.querySelector('meta[name="referrer"]')?.getAttribute('content'),
+      robots: document.querySelector('meta[name="robots"]')?.getAttribute('content'),
+    };
+  });
+  expect(policy.requestBlocked).toBe(true);
+  expect(policy.violations).toContain('connect-src');
+  expect(policy.referrer).toBe('no-referrer');
+  expect(policy.robots).toContain('noindex');
+  await page.getByRole('button', { name: 'Fortschritt & Sicherung', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Deine Daten', exact: true })).toBeVisible();
+});
 test('production app exports a clean self-contained offline copy that starts without assets', async ({
   page,
   context,
