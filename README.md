@@ -12,17 +12,17 @@ Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer und �
 
 ## Öffnen: keine Installation nötig
 
-Zum Lernen brauchst du **kein Node.js und kein Terminal**. Verwende den Website-Link oder die fertige HTML-Datei.
-
-### Mit einem Link
-
-Die vorgesehene Adresse ist **https://uncryptobull.github.io/study-website-bbc/**. Sie funktioniert erst nach der Veröffentlichung über GitHub Pages; der Live-Status ist noch nicht bestätigt. Falls du eine 404-Seite siehst, nutze vorerst die Datei. Die Veröffentlichung ist in [docs/ACCESS.md](docs/ACCESS.md) beschrieben.
+Zum Lernen brauchst du **kein Node.js und kein Terminal**. Lade die fertige HTML-Datei herunter und öffne sie im Browser. Die Website-Adresse ist derzeit noch nicht nutzbar; der Dateidownload funktioniert unabhängig davon.
 
 ### Nur die fertige Datei herunterladen
 
 1. Öffne [Telematik-verstehen.html auf GitHub](https://github.com/uncryptobull/study-website-bbc/blob/main/Telematik-verstehen.html).
-2. Klicke rechts über der Datei auf **Download raw file** (Download-Symbol). Falls GitHub nur **Raw** zeigt, öffne es und speichere die Datei als **Telematik-verstehen.html**.
-3. Öffne die heruntergeladene **Telematik-verstehen.html** mit Edge, Chrome oder Firefox. Die ganze Lernanwendung ist darin enthalten.
+2. Klicke rechts über der Datei auf **Download raw file** (Download-Symbol).
+3. Öffne die gespeicherte **Telematik-verstehen.html** aus deinem Download-Ordner mit Edge, Chrome oder Firefox. Die ganze Lernanwendung ist darin enthalten.
+
+**Falls der Download-Knopf nicht funktioniert:** Rechtsklick auf **[fertige HTML-Datei direkt speichern](https://raw.githubusercontent.com/uncryptobull/study-website-bbc/main/Telematik-verstehen.html)** → **Link speichern unter…**. Speichere sie als **Telematik-verstehen.html**. Falls du den Link normal öffnest und Programmcode siehst, drücke **Strg+S** und speichere die Datei mit diesem Namen. Die Endung muss **.html** bleiben, nicht **.html.txt**. Öffne anschliessend die lokale Datei aus deinem Download-Ordner.
+
+Dieser Dateidownload benötigt kein GitHub Pages. Eine Seite mit «There isn't a GitHub Pages site here» gehört zum Website-Link, nicht zur direkten Datei-Adresse oben.
 
 ### Wenn du bereits das GitHub-ZIP heruntergeladen hast
 
@@ -31,6 +31,10 @@ Die vorgesehene Adresse ist **https://uncryptobull.github.io/study-website-bbc/*
 3. Öffne **Telematik-verstehen.html**. Verwende **nicht `index.html`**: Das ist die Startdatei für die Entwicklung und benötigt einen Entwicklungsserver. Sie zeigt deshalb einen Hinweis mit einem Link zur fertigen Datei.
 
 Falls Windows das ZIP blockiert: Rechtsklick auf das ZIP → **Eigenschaften** → **Zulassen/Blockierung aufheben**, sofern diese Option angezeigt wird, dann erneut entpacken. Einfacher ist der direkte Download der einzelnen HTML-Datei oben. Auf verwalteten Schulgeräten können lokale HTML-Dateien durch Richtlinien gesperrt sein; verwende dann die veröffentlichte Website oder frage die zuständige IT. [Weitere Hinweise zu Zugang und Sicherungen](docs/ACCESS.md).
+
+### Website-Zugang: Veröffentlichung noch offen
+
+Für `https://uncryptobull.github.io/study-website-bbc/` wurde eine GitHub-Pages-404-Seite gemeldet. Verwende zum Lernen vorerst den Dateidownload oben. Ein Administrator muss unter **Settings → Pages → Source** die Option **GitHub Actions** wählen und unter **Actions → Publish study site → Run workflow** veröffentlichen. Teile den Website-Link erst, wenn **build** und **deploy** erfolgreich sind und die App unter der angezeigten Deployment-Adresse geöffnet werden kann. [Einrichtungsschritte](docs/ACCESS.md#eine-website-mit-github-pages).
 
 ![Die Desktop-Übersicht von Telematik verstehen](docs/dashboard-dark.png)
 

@@ -1,14 +1,18 @@
 # Die App öffnen und weitergeben
 
-## Mit einem Link öffnen
+## Aktueller Zugang
 
-Die vorgesehene Schuladresse ist **https://uncryptobull.github.io/study-website-bbc/**. Der Live-Status ist noch nicht bestätigt; GitHub Pages muss zuerst erfolgreich veröffentlichen. Falls die Adresse 404 zeigt, nutze vorerst die fertige Datei unten. Die einmalige Einrichtung ist weiter unten beschrieben.
+Für die vorgesehene Schuladresse `https://uncryptobull.github.io/study-website-bbc/` wurde eine GitHub-Pages-404-Seite gemeldet. Verwende zum Lernen die fertige Datei unten. Der Dateidownload funktioniert unabhängig von GitHub Pages. Die Einrichtung der Website ist weiter unten beschrieben; teile ihre Adresse erst nach einer erfolgreichen Veröffentlichung und einem tatsächlichen Aufruf der App.
 
 ## Die fertige Datei direkt herunterladen
 
 1. Öffne [Telematik-verstehen.html auf GitHub](https://github.com/uncryptobull/study-website-bbc/blob/main/Telematik-verstehen.html).
-2. Wähle **Download raw file** (Download-Symbol rechts über der Datei). Falls nur **Raw** erscheint, öffne es und speichere die Datei als **Telematik-verstehen.html**.
-3. Öffne die heruntergeladene Datei mit Edge, Chrome oder Firefox.
+2. Wähle **Download raw file** (Download-Symbol rechts über der Datei).
+3. Öffne die gespeicherte **Telematik-verstehen.html** aus deinem Download-Ordner mit Edge, Chrome oder Firefox.
+
+Falls der GitHub-Knopf nicht funktioniert, verwende **[die direkte HTML-Datei](https://raw.githubusercontent.com/uncryptobull/study-website-bbc/main/Telematik-verstehen.html)**: Rechtsklick auf den Link → **Link speichern unter…**. Wenn du den Link normal öffnest, kann der Browser Programmcode anzeigen. Speichere ihn dann mit **Strg+S** als **Telematik-verstehen.html**; bei der Dateitypauswahl gegebenenfalls **Alle Dateien** wählen, damit nicht **.html.txt** angehängt wird. Öffne danach die gespeicherte lokale Datei.
+
+Der direkte Dateilink verwendet `raw.githubusercontent.com` und benötigt kein GitHub Pages. Ein GitHub-Pages-404 ist ein Hinweis auf eine Website-Adresse; kontrolliere in diesem Fall, ob du die direkte Datei-Adresse oben verwendet hast.
 
 Die Datei enthält Anwendung, Schriften und Lerninhalte. Zum Lernen brauchst du **kein Node.js, kein Terminal und keine Installation**. Externe Quellen und Videos benötigen Internet, die Lerninhalte selbst nicht.
 
@@ -31,6 +35,8 @@ Datei-Downloads und lokale Datei-URLs können auf verwalteten Schul-/Arbeitsger�
 ## Eine Website mit GitHub Pages
 
 Die Bereitstellung ist als Workflow **Publish study site** vorbereitet. Die App braucht auch online kein Backend und keine Anmeldung. Der Website-Link ist nicht allein durch das Speichern dieses Workflows aktiv.
+
+Die geprüften bisherigen **Publish study site**-Läufe wurden als **skipped** angezeigt. Ein übersprungener Lauf veröffentlicht keine Website. Der Workflow wartet bei normalen Pushes darauf, dass GitHub Pages für das Repository als aktiviert gemeldet wird; ein Administrator kann ihn nach der Einrichtung manuell starten.
 
 Ein Repository-Administrator muss einmal:
 
