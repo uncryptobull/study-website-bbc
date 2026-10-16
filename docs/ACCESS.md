@@ -1,12 +1,32 @@
 # Die App öffnen und weitergeben
 
-## Eine Datei, keine Installation
+## Mit einem Link öffnen
 
-Die fertige Datei heisst **Telematik-verstehen.html**. Speichere sie und öffne sie mit Edge oder Chrome. Sie enthält die Anwendung, Schriften und Lerninhalte. Du brauchst weder Node.js noch eine ZIP-Extraktion.
+Die vorgesehene Schuladresse ist **https://uncryptobull.github.io/study-website-bbc/**. Der Live-Status ist noch nicht bestätigt; GitHub Pages muss zuerst erfolgreich veröffentlichen. Falls die Adresse 404 zeigt, nutze vorerst die fertige Datei unten. Die einmalige Einrichtung ist weiter unten beschrieben.
+
+## Die fertige Datei direkt herunterladen
+
+1. Öffne [Telematik-verstehen.html auf GitHub](https://github.com/uncryptobull/study-website-bbc/blob/main/Telematik-verstehen.html).
+2. Wähle **Download raw file** (Download-Symbol rechts über der Datei). Falls nur **Raw** erscheint, öffne es und speichere die Datei als **Telematik-verstehen.html**.
+3. Öffne die heruntergeladene Datei mit Edge, Chrome oder Firefox.
+
+Die Datei enthält Anwendung, Schriften und Lerninhalte. Zum Lernen brauchst du **kein Node.js, kein Terminal und keine Installation**. Externe Quellen und Videos benötigen Internet, die Lerninhalte selbst nicht.
+
+## Das GitHub-ZIP verwenden
+
+1. Im Repository **Code → Download ZIP** wählen.
+2. Das ZIP speichern und vollständig entpacken: Rechtsklick → **Alle extrahieren**.
+3. Im entpackten Projektordner **Telematik-verstehen.html** öffnen.
+
+**Nicht die `index.html` im Hauptordner öffnen.** Sie gehört zum Quellcode und braucht einen Entwicklungsserver. Beim direkten Öffnen zeigt sie einen Hinweis mit einem Link zur fertigen HTML-Datei. Eine leere Seite kann entstehen, wenn eine alte Quellcodeversion ohne diesen Hinweis verwendet wird. Lade in diesem Fall die aktuelle **Telematik-verstehen.html** über den direkten Link oben herunter.
+
+Wenn Windows das Entpacken verweigert, öffne per Rechtsklick auf das gespeicherte ZIP die **Eigenschaften**. Falls **Zulassen/Blockierung aufheben** angezeigt wird, aktiviere es und entpacke erneut. Alternativ umgehst du das ZIP vollständig mit dem Download der einzelnen HTML-Datei. Schul-/Arbeitsrichtlinien werden dadurch nicht geändert.
+
+## Eine Offline-Kopie aus der Website speichern
 
 Auf einer gehosteten Version findest du rechts oben **Offline-Datei**. Dieser Knopf speichert die gleiche Anwendung als einzelne HTML-Datei. Deine eingegebenen Antworten werden dabei nicht in die Datei kopiert. Lernfortschritt bleibt separat im Browserspeicher und lässt sich unter **Fortschritt & Sicherung** exportieren/importieren.
 
-Datei-Downloads und lokale Datei-URLs können auf verwalteten Schul-/Arbeitsgeräten durch Richtlinien blockiert sein. Die Cloud-Testumgebung blockiert direkte Datei-URLs; die Einzeldatei wurde dort allein über HTTP geladen und ihr Start ohne weitere Assets geprüft. Für solche Geräte ist der gehostete Link der geeignete Zugang.
+Datei-Downloads und lokale Datei-URLs können auf verwalteten Schul-/Arbeitsgeräten durch Richtlinien blockiert sein. Verwende in diesem Fall die veröffentlichte Website oder wende dich an die zuständige IT. Die Cloud-Testumgebung blockiert direkte Datei-URLs; die Einzeldatei wurde dort allein über HTTP geladen und ihr Start ohne weitere Assets geprüft. Ein nativer `file://`-Start ist dort nicht nachgewiesen.
 
 ## Eine Website mit GitHub Pages
 

@@ -26,6 +26,7 @@ import { topics, questions, type Topic } from './content';
 import { learningGroups, learningSteps } from './learning';
 import Trainer from './Trainer';
 import Quiz from './Quiz';
+import PracticePage from './PracticePage';
 import GuidedLesson from './GuidedLesson';
 import SimulationsPage from './SimulationsPage';
 import { ProgressPage, Sources } from './StudyPages';
@@ -490,12 +491,23 @@ export default function App() {
               </div>
             </>
           )}
-          {(page === 'quiz' || page === 'exam' || page === 'mistakes') && (
+          {(page === 'quiz' || page === 'mistakes') && (
+            <PracticePage
+              key={`${page}-${topic ?? 'all'}`}
+              onAnswer={record}
+              mistakes={progress.mistakes}
+              initialTopic={topic ?? 'all'}
+              mode={page === 'mistakes' ? 'mistakes' : 'practice'}
+              onSessionChange={setSessionActive}
+              onStudyTopic={(id) => openTopic(id, 0)}
+            />
+          )}
+          {page === 'exam' && (
             <Quiz
               key={`${page}-${topic ?? 'all'}`}
               onAnswer={record}
               mistakes={progress.mistakes}
-              initialMode={page === 'exam' ? 'exam' : page === 'mistakes' ? 'mistakes' : 'practice'}
+              initialMode="exam"
               initialTopic={topic ?? 'all'}
               onSessionChange={setSessionActive}
               onStudyTopic={(id) => openTopic(id, 0)}

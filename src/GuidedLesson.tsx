@@ -161,7 +161,7 @@ export default function GuidedLesson({
               </ul>
               <div className="summary-actions">
                 <button className="button primary" onClick={onQuiz}>
-                  Mit fünf Fragen festigen
+                  Mit Aufgaben festigen
                   <ArrowRight size={17} />
                 </button>
                 {onNextTopic && (

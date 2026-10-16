@@ -55,6 +55,7 @@ test('production app exports a clean self-contained offline copy that starts wit
   page,
   context,
 }) => {
+  expect(await readFile('Telematik-verstehen.html', 'utf8')).toBe(source);
   const requests: string[] = [],
     errors: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
@@ -89,4 +90,23 @@ test('production app exports a clean self-contained offline copy that starts wit
   await expect(page.locator('.network-result')).toContainText('192.168.1.64');
   expect(requests).toEqual([address + '/', address + '/downloaded.html']);
   expect(errors).toEqual([]);
+});
+
+test('source entry gives a useful file-opening guide when scripts cannot run', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto('http://127.0.0.1:5173/');
+    await expect(
+      page.getByRole('heading', { name: 'Telematik verstehen', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Telematik-verstehen.html', exact: true }),
+    ).toHaveAttribute('href', './Telematik-verstehen.html');
+    await expect(page.locator('body')).toContainText('braucht keine Installation');
+  } finally {
+    await context.close();
+  }
 });

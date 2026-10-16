@@ -7,17 +7,18 @@
     'Segoe UI',
     sans-serif;
   font-synthesis: none;
-  --bg: #f8f9fd;
+  color-scheme: light;
+  --bg: #f3f5f8;
   --surface: #fff;
-  --surface-alt: #f2f4fa;
+  --surface-alt: #f4f6f9;
   --text: #131722;
-  --muted: #5d6475;
-  --border: #e0e3eb;
-  --accent: #2456d9;
+  --muted: #536174;
+  --border: #d8dfe8;
+  --accent: #2457d6;
   --accent-fill: #2962ff;
-  --accent-soft: #eef3ff;
-  --side: #fff;
-  --blue-line: #aebff2;
+  --accent-soft: #eaf0ff;
+  --side: #f9fafc;
+  --blue-line: #b8c9ef;
   --error: #b43637;
   --error-bg: #fff0ef;
   --amber: #875900;
@@ -2809,6 +2810,96 @@ dialog.quiz-exit-dialog > div:last-child {
 .skip-link:focus {
   top: 12px;
 }
+:root[data-theme='light'] .nav-item {
+  font-size: 13px;
+}
+:root[data-theme='light'] .sidebar-bottom .nav-item {
+  font-size: 12px;
+}
+:root[data-theme='light'] .nav-item.selected {
+  box-shadow: inset 3px 0 var(--accent-fill);
+}
+:root[data-theme='light'] :is(.card, .lesson-sheet, .lesson-glossary) {
+  box-shadow: 0 1px 3px rgb(19 23 34 / 4%);
+}
+:root[data-theme='light'] .start-lesson {
+  border-color: var(--border);
+  border-left-color: var(--accent-fill);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgb(19 23 34 / 4%);
+}
+:root[data-theme='light'] .home-start-grid {
+  gap: 24px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+:root[data-theme='light'] .how-to-learn {
+  padding: 25px 27px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+:root[data-theme='light'] .how-to-learn li:last-child {
+  margin-bottom: 0;
+}
+:root[data-theme='light'] .how-to-learn li > span {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+:root[data-theme='light'] .home-focus {
+  padding: 25px 27px;
+  margin-top: 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+:root[data-theme='light'] .course-overview {
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+:root[data-theme='light'] .course-group-preview {
+  padding: 20px;
+}
+:root[data-theme='light'] .course-group-preview:nth-child(odd) {
+  border-right: 1px solid var(--border);
+}
+:root[data-theme='light'] .course-group-preview:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+:root[data-theme='light'] .course-group-preview:hover {
+  background: var(--surface-alt);
+}
+:root[data-theme='light'] .course-group-preview:focus-visible {
+  outline-offset: -3px;
+}
+:root[data-theme='light'] :is(input:not([type='range']), textarea, select) {
+  background: var(--surface);
+  border-color: #b8c3d2;
+}
+:root[data-theme='light'] :is(input, textarea, select):hover {
+  border-color: #7d8ba0;
+}
+:root[data-theme='light'] :is(input, textarea, select):focus-visible {
+  border-color: var(--accent);
+}
+:root[data-theme='light'] input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+:root[data-theme='light'] .search-box:focus-within {
+  border-color: var(--accent);
+}
+:root[data-theme='light'] :is(.example-label, .check-header, .address-annotation, .start-footnote) {
+  font-size: 11px;
+}
+:root[data-theme='light'] :is(.choices, .check-options) > button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+:root[data-theme='light'] .choices > button.selected {
+  border-color: var(--accent);
+}
 @media (min-width: 1500px) {
   main {
     padding: 42px 55px 0;
@@ -3340,6 +3431,16 @@ dialog.quiz-exit-dialog > div:last-child {
   }
 }
 @media (max-width: 480px) {
+  :root[data-theme='light'] .how-to-learn,
+  :root[data-theme='light'] .home-focus {
+    padding: 22px 18px;
+  }
+  :root[data-theme='light'] .course-group-preview:nth-child(odd) {
+    border-right: 0;
+  }
+  :root[data-theme='light'] .course-group-preview:nth-last-child(2) {
+    border-bottom: 1px solid var(--border);
+  }
   main {
     padding: 25px 16px 0;
   }

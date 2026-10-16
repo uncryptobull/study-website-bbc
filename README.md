@@ -2,7 +2,7 @@
 
 # Telematik verstehen
 
-Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer, Übungen und gespeicherter Lernfortschritt. Desktoporientiert, mit TradingView-Slate-/Blau-Palette und optionalem Hellmodus.
+Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer und Übungen. Desktoporientiert, mit Hell-/Dunkelmodus und lokal gespeichertem Lernfortschritt.
 
 ![React](https://img.shields.io/badge/React-19-149eca?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square)
@@ -10,27 +10,52 @@ Eine Lernanwendung für Netzwerktechnik: geführte Lektionen, IPv4-Trainer, Übu
 
 </div>
 
+## Öffnen: keine Installation nötig
+
+Zum Lernen brauchst du **kein Node.js und kein Terminal**. Verwende den Website-Link oder die fertige HTML-Datei.
+
+### Mit einem Link
+
+Die vorgesehene Adresse ist **https://uncryptobull.github.io/study-website-bbc/**. Sie funktioniert erst nach der Veröffentlichung über GitHub Pages; der Live-Status ist noch nicht bestätigt. Falls du eine 404-Seite siehst, nutze vorerst die Datei. Die Veröffentlichung ist in [docs/ACCESS.md](docs/ACCESS.md) beschrieben.
+
+### Nur die fertige Datei herunterladen
+
+1. Öffne [Telematik-verstehen.html auf GitHub](https://github.com/uncryptobull/study-website-bbc/blob/main/Telematik-verstehen.html).
+2. Klicke rechts über der Datei auf **Download raw file** (Download-Symbol). Falls GitHub nur **Raw** zeigt, öffne es und speichere die Datei als **Telematik-verstehen.html**.
+3. Öffne die heruntergeladene **Telematik-verstehen.html** mit Edge, Chrome oder Firefox. Die ganze Lernanwendung ist darin enthalten.
+
+### Wenn du bereits das GitHub-ZIP heruntergeladen hast
+
+1. Entpacke das ZIP vollständig: Rechtsklick auf die ZIP-Datei → **Alle extrahieren**.
+2. Öffne den entpackten Projektordner.
+3. Öffne **Telematik-verstehen.html**. Verwende **nicht `index.html`**: Das ist die Startdatei für die Entwicklung und benötigt einen Entwicklungsserver. Sie zeigt deshalb einen Hinweis mit einem Link zur fertigen Datei.
+
+Falls Windows das ZIP blockiert: Rechtsklick auf das ZIP → **Eigenschaften** → **Zulassen/Blockierung aufheben**, sofern diese Option angezeigt wird, dann erneut entpacken. Einfacher ist der direkte Download der einzelnen HTML-Datei oben. Auf verwalteten Schulgeräten können lokale HTML-Dateien durch Richtlinien gesperrt sein; verwende dann die veröffentlichte Website oder frage die zuständige IT. [Weitere Hinweise zu Zugang und Sicherungen](docs/ACCESS.md).
+
 ![Die Desktop-Übersicht von Telematik verstehen](docs/dashboard-dark.png)
+
+Weitere Ansichten: [Hellmodus](docs/dashboard.png) · [Interaktive Aufgaben](docs/exercises.png).
 
 ## Funktionen
 
 - **14 Themen in 59 Schritten lernen:** Geräte und Adressen zuerst, dann Binärzahlen, IPv4 und Subnetting. Jeder Schritt enthält eine Erklärung, ein Beispiel und eine kurze Verständnisfrage. Bei Fehlern wird der entscheidende Punkt erklärt.
 - **IPv4 verstehen:** Adressen, Masken und Bits live verändern; Netzadresse, Broadcast und Hostbereich nachvollziehen. `/31` und `/32` werden als Sonderfälle behandelt.
 - **Selbst ausprobieren:** Binärtrainer, beidseitiger Netzvergleich und FLSM-Aufteilung.
-- **Aktiv üben:** 70 feste Fragen, neu generierte Subnetting-Aufgaben, Hinweise, begründetes Feedback und Fehlerwiederholung.
+- **Interaktiv verstehen:** 28 Aufgaben zu allen 14 Themen: zuordnen, Abläufe ordnen, Entscheidungen treffen und Bits schalten. Hinweise und Erklärungen helfen beim nächsten Versuch.
+- **Prüfungsfragen üben:** 70 feste Fragen, neu generierte Subnetting-Aufgaben, Hinweise, begründetes Feedback und Fehlerwiederholung bleiben separat verfügbar.
 - **Prüfungstraining machen:** Eine gemischte Runde mit einer Frage pro Thema und anschliessender Auswertung.
 - **Zusammenhänge ausprobieren:** Schrittweise Abläufe für DHCP, DNS und Websiteaufrufe sowie eine bearbeitbare Routingtabelle und PAT-Zuordnungen.
-- **Fortschritt behalten:** Der genaue Lektionsschritt bleibt nach einem Reload erhalten. JSON-Sicherungen, Hell-/Dunkelmodus, Tastaturbedienung und Fokus-Timer sind eingebaut.
+- **Fortschritt behalten:** Der genaue Lektionsschritt bleibt nach einem Reload erhalten. JSON-Sicherungen, Hell-/Dunkelmodus, Tastaturbedienung und Fokus-Timer sind eingebaut. Version 1.2.0 überarbeitet den Hellmodus mit neutralen Flächen, deutlichen Eingabefeldern und klaren Auswahlzuständen.
 
 Keine Anmeldung, API-Schlüssel oder Backend-Dienste. Die Anwendung lädt keine externen Schriften oder Video-Player; Quellen und Videos öffnen nur nach einem Klick.
 
 Der Lernstand bleibt im Browser. Die produktive App sperrt ausgehende Datenanfragen und übermittelt keinen Referrer. Hinweise zu Hosting, Sicherungen und öffentlichem Quellcode stehen in [docs/PRIVACY.md](docs/PRIVACY.md).
 
-## Als Link oder Datei benutzen
+## Offline-Datei und Lernstand
 
 Zum Lernen brauchst du keine Entwicklungswerkzeuge. Die fertige **Telematik-verstehen.html** enthält die ganze App. Auf einer gehosteten Version kannst du sie mit **Offline-Datei** rechts oben speichern. Antworten und Fortschritt werden nicht in die weitergegebene HTML-Datei eingebettet; eine separate Sicherung lässt sich in der App exportieren.
 
-Die Website-Bereitstellung über GitHub Pages ist vorbereitet. Ein Administrator muss einmal Pages aktivieren und **Publish study site** starten. Der Link ist erst nach erfolgreicher Veröffentlichung live. Die konkreten Schritte stehen in [docs/ACCESS.md](docs/ACCESS.md).
+Die fertige Datei liegt auch direkt im Hauptordner dieses Repositorys. Bei jedem `npm run build` wird sie aus dem Produktionsbuild aktualisiert. Lernfortschritt wird pro Browser und Speicherort getrennt gespeichert; sichere ihn unter **Fortschritt & Sicherung**, bevor du zwischen Datei und Website wechselst.
 
 ## Entwickeln und bearbeiten
 
@@ -43,13 +68,13 @@ npm run dev
 
 Öffne die im Terminal angezeigte lokale Adresse. Mit `Ctrl+C` beendest du den Entwicklungsserver.
 
-### Ohne Entwicklungswerkzeuge lernen
+### Eine neue fertige Datei bauen
 
 ```sh
 npm run build
 ```
 
-Danach kannst du **`dist/index.html` per Doppelklick öffnen** oder diese Datei weitergeben. Das fertige Lernprogramm ist in einer HTML-Datei gebündelt. Externe Quellen/Videos benötigen weiterhin Internet. Der Fortschritt bleibt pro Browser und Speicherort getrennt; nutze den Export für Sicherungen und zum Übertragen.
+Der Build erzeugt **`dist/index.html`** für die Veröffentlichung und aktualisiert **`Telematik-verstehen.html` im Projekt-Hauptordner** für den direkten Download. Gib diese fertige Datei weiter. Bearbeite die HTML-Datei nicht von Hand; ändere den Quellcode und baue sie neu. Externe Quellen/Videos benötigen weiterhin Internet.
 
 Bei erfolgreichen GitHub-Actions-Läufen wird der fertige Build ausserdem als Download-Artefakt `Telematik-verstehen-offline` bereitgestellt. Zusätzlich ist eine getrennte GitHub-Pages-Bereitstellung vorbereitet; deren Aktivierung ist in [docs/ACCESS.md](docs/ACCESS.md) beschrieben.
 
@@ -57,15 +82,19 @@ Bei erfolgreichen GitHub-Actions-Läufen wird der fertige Build ausserdem als Do
 
 Die wichtigsten Dateien:
 
-| Du möchtest …                       | Dann bearbeite …          |
-| ----------------------------------- | ------------------------- |
-| Geführte Lektionen ändern           | `src/learning.ts`         |
-| Feste Quizfragen ändern             | `src/content.ts`          |
-| Eine IPv4-Berechnung ändern         | `src/network.ts`          |
-| Einen Netzwerkablauf erklären       | `src/simulations.ts`      |
-| Routing-/PAT-Übungen ändern         | `src/SimulationTools.tsx` |
-| Farben, Abstände oder Layout ändern | `src/styles.css`          |
-| Navigation oder Dashboard erweitern | `src/App.tsx`             |
+| Du möchtest …                       | Dann bearbeite …              |
+| ----------------------------------- | ----------------------------- |
+| Geführte Lektionen ändern           | `src/learning.ts`             |
+| Feste Quizfragen ändern             | `src/content.ts`              |
+| Interaktive Aufgaben ändern         | `src/concept-tasks.ts`        |
+| Interaktive Antworten darstellen    | `src/ConceptTaskCard.tsx`     |
+| Übungsarten und Runden ändern       | `src/PracticePage.tsx`        |
+| Eine IPv4-Berechnung ändern         | `src/network.ts`              |
+| Einen Netzwerkablauf erklären       | `src/simulations.ts`          |
+| Routing-/PAT-Übungen ändern         | `src/SimulationTools.tsx`     |
+| Farben, Abstände oder Layout ändern | `src/styles.css`              |
+| Navigation oder Dashboard erweitern | `src/App.tsx`                 |
+| Die Offline-Datei erstellen         | `scripts/package-offline.mjs` |
 
 Ein ausführlicherer Überblick steht in [docs/HANDOFF.md](docs/HANDOFF.md). Entstanden als gemeinsam geplantes, KI-unterstützt entwickeltes Lern- und Portfolio-Projekt.
 

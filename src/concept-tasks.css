@@ -1,0 +1,469 @@
+.concept-task {
+  max-width: 880px;
+  margin-inline: auto;
+}
+
+.concept-task-header,
+.concept-task-actions,
+.concept-help-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.concept-task-header {
+  margin-bottom: 22px;
+}
+
+.concept-task > h2 {
+  font-size: 23px;
+  margin-bottom: 12px;
+}
+
+.concept-task .concept-task-prompt {
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.concept-instructions {
+  margin: 12px 0 24px;
+  font-size: 13px;
+  max-width: 690px;
+}
+
+.concept-options {
+  display: grid;
+  gap: 10px;
+}
+
+.concept-option {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 17px 18px;
+  min-height: 62px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-alt);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.concept-option strong {
+  font-weight: 550;
+}
+
+.concept-option-indicator {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--muted);
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+.concept-option-detail {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.concept-task button.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.concept-option.selected .concept-option-indicator {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.concept-task :is(.concept-option, .concept-match-chip):hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.concept-task :is(.concept-option, .concept-match-chip, .concept-bit-grid button):disabled {
+  opacity: 1;
+}
+
+.concept-order {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.concept-order > li {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  padding: 12px 13px;
+  border-radius: 5px;
+}
+
+.concept-order > li:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.concept-order-number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.concept-order-label {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.concept-order-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.concept-order-controls button,
+.concept-formed-pairs button {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.concept-order-controls button:hover:not(:disabled),
+.concept-formed-pairs button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.concept-match-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 24px;
+}
+
+.concept-match-columns > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.concept-match h3 {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.concept-match-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 54px;
+  padding: 13px 15px;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-alt);
+}
+
+.concept-match-columns .concept-match-chip:disabled:not(.selected) {
+  color: var(--muted);
+}
+
+.concept-match-status {
+  margin: 14px 0 4px;
+  min-height: 20px;
+}
+
+.concept-formed-pairs {
+  margin-top: 20px;
+}
+
+.concept-formed-pairs ul {
+  padding: 0;
+  margin: 10px 0 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+
+.concept-formed-pairs li {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) 15px minmax(0, 1.2fr) 36px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--blue-line);
+  border-radius: 5px;
+  background: var(--accent-soft);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.concept-formed-pairs strong {
+  font-weight: 550;
+}
+
+.concept-formed-pairs li > svg {
+  color: var(--accent);
+}
+
+.concept-bit-readout {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 23px;
+}
+
+.concept-bit-readout > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.concept-bit-readout span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.concept-bit-readout strong {
+  font-size: 32px;
+  font-weight: 550;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.concept-bit-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.concept-bit-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 3px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.concept-bit-grid button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.concept-bit-grid button span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.concept-bit-grid button strong {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-weight: 500;
+  font-size: 27px;
+}
+
+.concept-bit-grid button.selected strong {
+  color: var(--accent);
+}
+
+.concept-bit-sum {
+  margin-top: 15px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  color: var(--text);
+  font-size: 13px;
+  min-height: 25px;
+}
+
+.concept-help-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 24px;
+}
+
+.concept-hint {
+  margin-top: 15px;
+  padding: 15px 17px;
+  background: var(--surface-alt);
+  border-left: 2px solid var(--accent);
+  font-size: 12px;
+}
+
+.concept-hint p {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.concept-feedback {
+  padding: 19px 20px;
+  margin-top: 24px;
+  border: 1px solid var(--blue-line);
+  border-radius: 5px;
+  background: var(--accent-soft);
+}
+
+.concept-feedback.retry {
+  border-color: var(--border);
+  border-left: 3px solid var(--accent);
+  background: var(--surface-alt);
+}
+
+.concept-feedback h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.concept-feedback h3 svg {
+  color: var(--accent);
+}
+
+.concept-feedback p {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.concept-feedback .text-button {
+  margin-top: 13px;
+}
+
+.concept-solution {
+  margin-top: 17px;
+  padding-top: 14px;
+  border-top: 1px solid var(--blue-line);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.concept-solution > strong {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.concept-solution :is(ol, ul) {
+  margin: 0;
+  padding-left: 21px;
+}
+
+.concept-solution li + li {
+  margin-top: 5px;
+}
+
+.concept-feedback .concept-reveal-note {
+  margin-top: 13px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.concept-task-actions {
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+  margin-top: 24px;
+}
+
+.concept-task-actions > .button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 620px) {
+  .concept-task-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .concept-task > h2 {
+    font-size: 20px;
+  }
+
+  .concept-match-columns {
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .concept-match-chip {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .concept-formed-pairs li {
+    grid-template-columns: minmax(0, 1fr) 36px;
+    gap: 4px 10px;
+  }
+
+  .concept-formed-pairs li > svg {
+    display: none;
+  }
+
+  .concept-formed-pairs li > span {
+    grid-column: 1;
+  }
+
+  .concept-formed-pairs li > button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+
+  .concept-bit-grid {
+    gap: 4px;
+  }
+
+  .concept-bit-grid button span {
+    font-size: 10px;
+  }
+
+  .concept-bit-grid button strong {
+    font-size: 22px;
+  }
+
+  .concept-order > li {
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .concept-order-controls {
+    flex-direction: column;
+  }
+
+  .concept-order-label {
+    font-size: 12px;
+  }
+
+  .concept-task-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+}

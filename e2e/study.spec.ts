@@ -43,7 +43,7 @@ test('all lessons are searchable and guided learning persists its exact position
       page.evaluate(() => JSON.parse(localStorage.getItem('telematik-progress-v1')!).completed),
     )
     .toContain('subnetting');
-  await page.getByRole('button', { name: 'Mit fünf Fragen festigen' }).click();
+  await page.getByRole('button', { name: 'Mit Aufgaben festigen' }).click();
   await expect(page.locator('select')).toHaveValue('subnetting');
 });
 
@@ -91,6 +91,7 @@ test('wrong answers persist, can be replayed and clear after a correct answer', 
   page,
 }) => {
   await page.goto('/#quiz');
+  await page.getByRole('tab', { name: 'Prüfungsfragen', exact: true }).click();
   await page.locator('select').selectOption('binary');
   await page.getByRole('button', { name: 'Lernrunde starten' }).click();
   const prompt = await page.locator('.question-card h2').innerText();
@@ -137,6 +138,7 @@ test('mixed exam finishes with a topic breakdown', async ({ page }) => {
 
 test('generated subnet questions can be replayed from stored IDs', async ({ page }) => {
   await page.goto('/#quiz');
+  await page.getByRole('tab', { name: 'Prüfungsfragen', exact: true }).click();
   await page.getByRole('button', { name: 'Aufgaben generieren' }).click();
   await page.locator('.question-card input').fill('0.0.0.0');
   await page.getByRole('button', { name: 'Antwort prüfen' }).click();
@@ -302,6 +304,7 @@ test('unfinished quiz navigation is explicit and cancellation preserves the answ
   page,
 }) => {
   await page.goto('/#quiz/binary');
+  await page.getByRole('tab', { name: 'Prüfungsfragen', exact: true }).click();
   await page.getByRole('button', { name: 'Lernrunde starten' }).click();
   const original = await page.locator('.question-card h2').innerText();
   await page.getByRole('button', { name: 'Lektionen', exact: true }).click();

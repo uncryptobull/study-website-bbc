@@ -2,13 +2,15 @@
 
 ## Stand
 
-«Telematik verstehen» ist eine eigenständige React/TypeScript-Anwendung mit Vite. Kein Backend, keine Anmeldung und keine API-Schlüssel. Der Desktop ist das primäre Ziel; schmale Bildschirme werden ebenfalls unterstützt. Die Oberfläche verwendet eine Slate-/Blau-Palette, ohne die früheren grünen Flächen und Marketingtexte. Dark ist der Standard für neue Profile. Theme, Fortschritt und der genaue Lektionsschritt werden im Browser gespeichert.
+Version **1.2.0** von «Telematik verstehen» ist eine eigenständige React/TypeScript-Anwendung mit Vite. Kein Backend, keine Anmeldung und keine API-Schlüssel. Der Desktop ist das primäre Ziel; schmale Bildschirme werden ebenfalls unterstützt. Die Oberfläche verwendet eine Slate-/Blau-Palette, ohne die früheren grünen Flächen und Marketingtexte. Der Hellmodus hat neutrale Flächen, deutlich abgegrenzte Eingabefelder und klarere Auswahlzustände. Dark ist der Standard für neue Profile. Theme, Fortschritt und der genaue Lektionsschritt werden im Browser gespeichert.
 
-Umgesetzt: 14 Lektionen mit 59 geführten Schritten, kurzen Verständnisfragen und visuellen Beispielen, 70 feste Fragen, generierte Subnetting-Aufgaben, Prüfungstraining, Fehlerwiederholung, IPv4-/Binärtrainer, Netzvergleich, FLSM, schrittweise Netzwerkabläufe, interaktive Routing-/PAT-Tabellen sowie Import/Export von Fortschritt. Erklärfragen werden ausdrücklich selbst eingeschätzt. Automatische Trefferquoten enthalten nur automatisch prüfbare Fragen.
+Umgesetzt: 14 Lektionen mit 59 geführten Schritten, kurzen Verständnisfragen und visuellen Beispielen; zusätzlich 28 interaktive Aufgaben mit vier Typen (Zuordnen, Reihenfolge, Entscheidung und Bits). Die 70 festen Prüfungsfragen, generierten Subnetting-Aufgaben und das Prüfungstraining bleiben verfügbar. Dazu kommen Fehlerwiederholung, IPv4-/Binärtrainer, Netzvergleich, FLSM, schrittweise Netzwerkabläufe, interaktive Routing-/PAT-Tabellen sowie Import/Export von Fortschritt. Erklärfragen werden ausdrücklich selbst eingeschätzt. Automatische Trefferquoten enthalten nur automatisch prüfbare Fragen.
 
 ## Zugang für Lernende
 
-Die Einzelfile-Version ist weiterhin das installationsfreie Ergebnis. Die Produktionsoberfläche kann über **Offline-Datei** eine saubere selbstständige Kopie herunterladen. GitHub-Pages-Bereitstellung ist in `.github/workflows/pages.yml` vorbereitet; Hosting wurde nicht durch die Sitzung aktiviert und ein Live-Link ist noch nicht bestätigt. Siehe `docs/ACCESS.md` für die einmaligen Admin-Schritte.
+Die fertige **Telematik-verstehen.html** liegt im Hauptordner des Repositorys und enthält die gesamte Anwendung. Lernende laden sie direkt herunter oder öffnen sie nach **Code → Download ZIP → Alle extrahieren**. Sie brauchen kein Node.js und kein Terminal. Die Quellcode-`index.html` im Hauptordner benötigt einen Entwicklungsserver; beim direkten Öffnen zeigt sie einen Hinweis mit einem Link zur fertigen Datei. Die Produktionsoberfläche kann über **Offline-Datei** eine saubere selbstständige Kopie herunterladen.
+
+GitHub-Pages-Bereitstellung ist in `.github/workflows/pages.yml` vorbereitet; ein Live-Link ist noch nicht bestätigt. Die vorgesehene Adresse lautet `https://uncryptobull.github.io/study-website-bbc/` und funktioniert erst nach erfolgreicher Veröffentlichung. Siehe [ACCESS.md](ACCESS.md) für die Downloadanleitung, Hinweise zu blockierten ZIP-Dateien und die einmaligen Admin-Schritte. Lokale Datei-URLs können auf Schulgeräten durch Richtlinien gesperrt sein; der direkte `file://`-Start ist in der verwalteten Cloud-Testumgebung nicht nachgewiesen.
 
 Beim Fortschrittsimport zählt die neueste Antwort je Frage, damit alte Sicherungen keine bereits behobenen Fehler wieder öffnen. Simulationstabs behalten besuchte Schritte und bearbeitete Routing-/PAT-Eingaben, solange die Ansicht geöffnet bleibt.
 
@@ -23,29 +25,35 @@ npm ci
 npm run dev
 ```
 
-Voraussetzung: Node.js ab 20.19 (empfohlen: aktuelle Node-22-LTS-Version). `npm run build` erzeugt eine eigenständig öffnungsfähige `dist/index.html`, inklusive lokal eingebetteter Schriften. Links zu externen Quellen benötigen Internet.
+Voraussetzung: Node.js ab 20.19 (empfohlen: aktuelle Node-22-LTS-Version). `npm run build` erzeugt `dist/index.html` mit lokal eingebetteten Schriften. Anschliessend aktualisiert `scripts/package-offline.mjs` die fertige `Telematik-verstehen.html` im Projekt-Hauptordner automatisch. Diese erzeugte Datei wird mit dem Quellcode veröffentlicht; sie wird nicht von Hand bearbeitet. Links zu externen Quellen benötigen Internet.
 
 ## Wo ändere ich was?
 
-| Datei                      | Zuständigkeit                                            |
-| -------------------------- | -------------------------------------------------------- |
-| `src/learning.ts`          | Geführte Lektionsschritte und Verständnisfragen          |
-| `src/GuidedLesson.tsx`     | Lektionsansicht, Schrittsteuerung und Zusammenfassung    |
-| `src/LessonVisual.tsx`     | Lernillustrationen und direkte Interaktionen             |
-| `src/content.ts`           | Feste Quizfragen, Quellen und Videoverweise              |
-| `src/network.ts`           | Reine IPv4-Berechnungen                                  |
-| `src/Trainer.tsx`          | Interaktive Trainer                                      |
-| `src/Quiz.tsx`             | Antwortprüfung, Hinweise und Übungsrunden                |
-| `src/simulations.ts`       | Schritte der Netzwerkabläufe                             |
-| `src/storage.ts`           | Fortschrittsformat und Importvalidierung                 |
-| `src/App.tsx`              | Navigation, Startseite, Lektionsübersicht                |
-| `src/navigation.ts`        | URL-Routen für Lektionen und Schritte                    |
-| `src/StudyPages.tsx`       | Fortschritt, Sicherungen, Begriffssuche und Quellen      |
-| `src/learning-progress.ts` | Abschlussregeln für die geführten Lektionen              |
-| `src/quiz-utils.ts`        | Eingabeprüfung und aufgabenspezifische Hinweise          |
-| `src/SimulationTools.tsx`  | Bearbeitbare Routingtabelle und PAT-Zuordnung            |
-| `src/styles.css`           | Desktop-Layout, kleinere Bildschirme, beide Farbschemata |
-| `e2e/study.spec.ts`        | Browserprüfungen                                         |
+| Datei                         | Zuständigkeit                                            |
+| ----------------------------- | -------------------------------------------------------- |
+| `src/learning.ts`             | Geführte Lektionsschritte und Verständnisfragen          |
+| `src/GuidedLesson.tsx`        | Lektionsansicht, Schrittsteuerung und Zusammenfassung    |
+| `src/LessonVisual.tsx`        | Lernillustrationen und direkte Interaktionen             |
+| `src/content.ts`              | Feste Quizfragen, Quellen und Videoverweise              |
+| `src/concept-tasks.ts`        | 28 interaktive Aufgaben und ihre Lösungen                |
+| `src/ConceptTaskCard.tsx`     | Eingabe, Prüfung und Feedback der vier Aufgabentypen     |
+| `src/PracticePage.tsx`        | Übungsarten, interaktive Runden und Fehlerwiederholung   |
+| `src/network.ts`              | Reine IPv4-Berechnungen                                  |
+| `src/Trainer.tsx`             | Interaktive Trainer                                      |
+| `src/Quiz.tsx`                | Antwortprüfung, Hinweise und Übungsrunden                |
+| `src/simulations.ts`          | Schritte der Netzwerkabläufe                             |
+| `src/storage.ts`              | Fortschrittsformat und Importvalidierung                 |
+| `src/App.tsx`                 | Navigation, Startseite, Lektionsübersicht                |
+| `src/navigation.ts`           | URL-Routen für Lektionen und Schritte                    |
+| `src/StudyPages.tsx`          | Fortschritt, Sicherungen, Begriffssuche und Quellen      |
+| `src/learning-progress.ts`    | Abschlussregeln für die geführten Lektionen              |
+| `src/quiz-utils.ts`           | Eingabeprüfung und aufgabenspezifische Hinweise          |
+| `src/SimulationTools.tsx`     | Bearbeitbare Routingtabelle und PAT-Zuordnung            |
+| `src/styles.css`              | Desktop-Layout, kleinere Bildschirme, beide Farbschemata |
+| `src/concept-tasks.css`       | Darstellung der interaktiven Aufgabenkarten              |
+| `src/practice.css`            | Auswahl und Ablauf der interaktiven Übungsrunden         |
+| `scripts/package-offline.mjs` | Fertige HTML-Datei für den Repository-Download kopieren  |
+| `e2e/study.spec.ts`           | Browserprüfungen                                         |
 
 ## Zusammenarbeit
 
